@@ -1,0 +1,16 @@
+type ApiError = variant {
+  NotFound : text;
+  Unauthorized : text;
+  AlreadyExists : text;
+};
+type Result = variant { Ok : User; Err : ApiError };
+type User = record {
+  username : opt text;
+  created_at : nat64;
+  user_id : principal;
+};
+service : {
+  create_user : (opt text) -> (Result);
+  get_user : () -> (Result) query;
+  get_users : () -> (vec User) query;
+}

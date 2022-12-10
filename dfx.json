@@ -1,0 +1,32 @@
+{
+	"version": 1,
+	"canisters": {
+		"assets": {
+			"type": "rust",
+			"package": "assets",
+			"candid": "candid/assets.did"
+		},
+		"chunks": {
+			"type": "rust",
+			"package": "chunks",
+			"candid": "candid/chunks.did"
+		},
+		"users": {
+			"type": "rust",
+			"package": "users",
+			"candid": "candid/users.did"
+		}
+	},
+	"defaults": {
+		"build": {
+			"packtool": "",
+			"args": ""
+		}
+	},
+	"networks": {
+		"local": {
+			"bind": "127.0.0.1:8000",
+			"type": "ephemeral"
+		}
+	}
+}

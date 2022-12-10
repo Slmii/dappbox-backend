@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "src/controllers/users",
+    "src/controllers/assets",
+    "src/controllers/chunks",
+    "src/lib"
+]

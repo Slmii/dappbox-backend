@@ -1,0 +1,49 @@
+type ApiError = variant {
+  NotFound : text;
+  Unauthorized : text;
+  AlreadyExists : text;
+};
+type Asset = record {
+  id : nat32;
+  updated_at : nat64;
+  asset_type : AssetType;
+  name : text;
+  size : nat32;
+  mime_type : text;
+  created_at : nat64;
+  user_id : principal;
+  is_favorite : bool;
+  parent_id : opt nat32;
+  chunks : vec Chunk;
+  extension : text;
+};
+type AssetType = variant { Folder; File };
+type Chunk = record { id : nat32; canister : principal; index : nat32 };
+type EditAsset = record {
+  id : nat32;
+  name : opt text;
+  is_favorite : opt bool;
+  parent_id : opt nat32;
+  extension : opt text;
+};
+type MoveAsset = record { id : nat32; parent_id : opt nat32 };
+type PostAsset = record {
+  asset_type : AssetType;
+  name : text;
+  size : nat32;
+  mime_type : text;
+  user_id : principal;
+  parent_id : opt nat32;
+  chunks : vec Chunk;
+  extension : text;
+};
+type Result = variant { Ok : vec Asset; Err : ApiError };
+type Result_1 = variant { Ok : Asset; Err : ApiError };
+service : {
+  add_asset : (PostAsset) -> (Asset);
+  delete_assets : (vec nat32) -> (Result);
+  edit_asset : (EditAsset) -> (Result_1);
+  get_assets : () -> (Result) query;
+  get_user_assets : () -> (vec Asset) query;
+  move_assets : (vec MoveAsset) -> (Result);
+}

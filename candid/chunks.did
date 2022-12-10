@@ -1,0 +1,17 @@
+type ApiError = variant {
+  NotFound : text;
+  Unauthorized : text;
+  AlreadyExists : text;
+};
+type Chunk = record { id : nat32; canister : principal; index : nat32 };
+type PostChunk = record { "blob" : vec nat8; index : nat32 };
+type Result = variant {
+  Ok : vec record { record { nat32; principal }; vec nat8 };
+  Err : ApiError;
+};
+type Result_1 = variant { Ok : vec nat8; Err : ApiError };
+service : {
+  add_chunk : (PostChunk) -> (Chunk);
+  get_chunks : () -> (Result) query;
+  get_chunks_by_chunk_id : (nat32) -> (Result_1) query;
+}
