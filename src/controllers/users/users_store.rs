@@ -1,6 +1,6 @@
 use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::api::time;
-use lib::types::{ api_error::ApiError, user::User };
+use lib::{ types::{ api_error::ApiError, user::User } };
 use std::{ cell::RefCell, collections::HashMap };
 
 #[derive(CandidType, Clone, Deserialize, Default)]
@@ -13,6 +13,14 @@ thread_local! {
 }
 
 impl UsersStore {
+	// ========== Admin calls
+
+	pub fn get_users() -> Vec<User> {
+		STATE.with(|state| state.borrow().users.values().cloned().collect())
+	}
+
+	// ========== Non-admin calls
+
 	pub fn get_user(principal: Principal) -> Result<User, ApiError> {
 		STATE.with(|state| {
 			let state = state.borrow();
@@ -20,10 +28,6 @@ impl UsersStore {
 			let opt_user = state.users.get(&principal);
 			opt_user.map_or(Err(ApiError::NotFound("USER_NOT_FOUND".to_string())), |user| Ok(user.clone()))
 		})
-	}
-
-	pub fn get_users() -> Vec<User> {
-		STATE.with(|state| state.borrow().users.values().cloned().collect())
 	}
 
 	pub fn create_user(principal: Principal, username: Option<String>) -> Result<User, ApiError> {

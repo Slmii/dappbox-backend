@@ -4,6 +4,7 @@ type ApiError = variant {
   AlreadyExists : text;
 };
 type Result = variant { Ok : User; Err : ApiError };
+type Result_1 = variant { Ok : vec User; Err : ApiError };
 type User = record {
   username : opt text;
   created_at : nat64;
@@ -12,5 +13,5 @@ type User = record {
 service : {
   create_user : (opt text) -> (Result);
   get_user : () -> (Result) query;
-  get_users : () -> (vec User) query;
+  get_users : () -> (Result_1) query;
 }

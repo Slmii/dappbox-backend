@@ -1,8 +1,11 @@
 use crate::assets_store::{ AssetsStore, STATE };
-use candid::candid_method;
+use candid::{ candid_method };
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update };
-use lib::types::{ api_error::ApiError, asset::{ Asset, PostAsset, EditAsset, MoveAsset } };
+use lib::{
+	types::{ api_error::ApiError, asset::{ Asset, PostAsset, EditAsset, MoveAsset } },
+	functions::{ validate_anonymous, validate_admin },
+};
 
 #[pre_upgrade]
 fn pre_upgrade() {
@@ -17,41 +20,62 @@ fn post_upgrade() {
 	});
 }
 
-// Admin call
-#[query]
-#[candid_method(query)]
-fn get_assets() -> Result<Vec<Asset>, ApiError> {
-	AssetsStore::get_assets(caller())
-}
+// ========== Admin calls
 
 #[query]
 #[candid_method(query)]
-fn get_user_assets() -> Vec<Asset> {
-	AssetsStore::get_user_assets(caller())
+fn get_assets() -> Result<Vec<Asset>, ApiError> {
+	match validate_admin(&caller()) {
+		Ok(_) => Ok(AssetsStore::get_assets()),
+		Err(err) => Err(err),
+	}
+}
+
+// ========== Non-admin calls
+
+#[query]
+#[candid_method(query)]
+fn get_user_assets() -> Result<Vec<Asset>, ApiError> {
+	match validate_anonymous(&caller()) {
+		Ok(principal) => Ok(AssetsStore::get_user_assets(principal)),
+		Err(err) => Err(err),
+	}
 }
 
 #[update]
 #[candid_method(update)]
-fn add_asset(asset: PostAsset) -> Asset {
-	AssetsStore::add_asset(caller(), asset)
+fn add_asset(asset: PostAsset) -> Result<Asset, ApiError> {
+	match validate_anonymous(&caller()) {
+		Ok(principal) => Ok(AssetsStore::add_asset(principal, asset)),
+		Err(err) => Err(err),
+	}
 }
 
 #[update]
 #[candid_method(update)]
 fn edit_asset(asset: EditAsset) -> Result<Asset, ApiError> {
-	AssetsStore::edit_asset(caller(), asset)
+	match validate_anonymous(&caller()) {
+		Ok(principal) => AssetsStore::edit_asset(principal, asset),
+		Err(err) => Err(err),
+	}
 }
 
 #[update]
 #[candid_method(update)]
 fn move_assets(assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
-	AssetsStore::move_assets(caller(), assets)
+	match validate_anonymous(&caller()) {
+		Ok(principal) => AssetsStore::move_assets(principal, assets),
+		Err(err) => Err(err),
+	}
 }
 
 #[update]
 #[candid_method(update)]
 fn delete_assets(asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
-	AssetsStore::delete_assets(caller(), asset_ids)
+	match validate_anonymous(&caller()) {
+		Ok(principal) => AssetsStore::delete_assets(principal, asset_ids),
+		Err(err) => Err(err),
+	}
 }
 
 #[test]

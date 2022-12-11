@@ -3,7 +3,6 @@ use ic_cdk::{ api::time };
 use lib::{
 	types::{ api_error::ApiError, asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset } },
 	functions::{ get_nested_child_assets },
-	whitelist::whitelist,
 };
 use std::{ cell::RefCell, collections::HashMap };
 
@@ -26,14 +25,13 @@ thread_local! {
 }
 
 impl AssetsStore {
-	// Admin call
-	pub fn get_assets(principal: Principal) -> Result<Vec<Asset>, ApiError> {
-		if !whitelist().contains(&principal) {
-			return Err(ApiError::Unauthorized("UNAUTHORIZED".to_string()));
-		}
+	// ========== Admin calls
 
-		Ok(STATE.with(|state| state.borrow().assets.values().cloned().collect()))
+	pub fn get_assets() -> Vec<Asset> {
+		STATE.with(|state| state.borrow().assets.values().cloned().collect())
 	}
+
+	// ========== Non-admin calls
 
 	pub fn get_user_assets(principal: Principal) -> Vec<Asset> {
 		STATE.with(|state| {

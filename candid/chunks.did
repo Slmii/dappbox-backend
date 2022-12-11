@@ -5,13 +5,14 @@ type ApiError = variant {
 };
 type Chunk = record { id : nat32; canister : principal; index : nat32 };
 type PostChunk = record { "blob" : vec nat8; index : nat32 };
-type Result = variant {
+type Result = variant { Ok : Chunk; Err : ApiError };
+type Result_1 = variant {
   Ok : vec record { record { nat32; principal }; vec nat8 };
   Err : ApiError;
 };
-type Result_1 = variant { Ok : vec nat8; Err : ApiError };
+type Result_2 = variant { Ok : vec nat8; Err : ApiError };
 service : {
-  add_chunk : (PostChunk) -> (Chunk);
-  get_chunks : () -> (Result) query;
-  get_chunks_by_chunk_id : (nat32) -> (Result_1) query;
+  add_chunk : (PostChunk) -> (Result);
+  get_chunks : () -> (Result_1) query;
+  get_chunks_by_chunk_id : (nat32) -> (Result_2) query;
 }
