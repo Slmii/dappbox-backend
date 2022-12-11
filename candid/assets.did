@@ -37,13 +37,14 @@ type PostAsset = record {
   chunks : vec Chunk;
   extension : text;
 };
-type Result = variant { Ok : vec Asset; Err : ApiError };
+type Result = variant { Ok : vec nat32; Err : ApiError };
 type Result_1 = variant { Ok : Asset; Err : ApiError };
+type Result_2 = variant { Ok : vec Asset; Err : ApiError };
 service : {
   add_asset : (PostAsset) -> (Asset);
   delete_assets : (vec nat32) -> (Result);
   edit_asset : (EditAsset) -> (Result_1);
-  get_assets : () -> (Result) query;
+  get_assets : () -> (Result_2) query;
   get_user_assets : () -> (vec Asset) query;
-  move_assets : (vec MoveAsset) -> (Result);
+  move_assets : (vec MoveAsset) -> (Result_2);
 }

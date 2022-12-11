@@ -157,37 +157,41 @@ impl AssetsStore {
 		})
 	}
 
-	pub fn delete_assets(principal: Principal, delete_asset_ids: Vec<u32>) -> Result<Vec<Asset>, ApiError> {
-		Ok(vec![])
+	pub fn delete_assets(principal: Principal, delete_asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+		STATE.with(|state| {
+			let user_assets = Self::get_user_assets(principal);
 
-		// STATE.with(|state| {
-		// 	let user_assets = Self::get_user_assets(principal);
+			let mut temp: Vec<u32> = vec![];
 
-		// 	let mut temp: Vec<Asset> = vec![];
+			for delete_asset_id in delete_asset_ids {
+				let mut state = state.borrow_mut();
 
-		// 	for delete_asset_id in delete_asset_ids {
-		// 		let mut state = state.borrow_mut();
+				// Find all assets linked to the principal
+				let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
 
-		// 		// Find all user_assets linked to the principal
-		// 		let mut user_asset_ids = state.user_assets.get_mut(&principal).cloned().unwrap_or_default();
+				// Check if the Vec has the asset_id that must be removed
+				if !user_asset_ids.contains(&delete_asset_id) {
+					return Err(ApiError::NotFound("ASSET_NOT_FOUND".to_string()));
+				}
 
-		// 		// Check if the Vec has the asset_id that must be removed
-		// 		if !user_asset_ids.contains(&delete_asset_id) {
-		// 			return Err(ApiError::NotFound("ASSET_NOT_FOUND".to_string()));
-		// 		}
+				// Get all child + nested assets that will be deleted
+				let mut assets_to_delete = get_nested_child_assets(&user_assets, &delete_asset_id);
+				// Include the asset_id for the for loop
+				assets_to_delete.push(delete_asset_id);
 
-		// 		// Get all nested child assets
-		// 		let assets_to_delete = get_nested_child_assets(&user_assets, &delete_asset_id);
+				// Retain/keep if the current id is not included in the assets_to_delete list
+				state.user_assets
+					.get_mut(&principal)
+					.cloned()
+					.unwrap_or_default()
+					.retain(|&id| !assets_to_delete.contains(&id));
+				state.assets.retain(|&id, _| !assets_to_delete.contains(&id));
+				// TODO: also delete chunks
 
-		// 		// Retain/keep if the current id is not included in the assets_to_delete list
-		// 		user_asset_ids.retain(|&id| !assets_to_delete.iter().any(|asset| asset.id == id));
-		// 		state.assets.retain(|&id, _| !assets_to_delete.iter().any(|asset| asset.id == id));
-		// 		// TODO: also delete chunks
+				temp.extend(assets_to_delete);
+			}
 
-		// 		temp.extend(assets_to_delete);
-		// 	}
-
-		// 	Ok(temp)
-		// })
+			Ok(temp)
+		})
 	}
 }

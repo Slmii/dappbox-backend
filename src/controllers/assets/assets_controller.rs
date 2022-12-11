@@ -50,7 +50,7 @@ fn move_assets(assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
 
 #[update]
 #[candid_method(update)]
-fn delete_assets(asset_ids: Vec<u32>) -> Result<Vec<Asset>, ApiError> {
+fn delete_assets(asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 	AssetsStore::delete_assets(caller(), asset_ids)
 }
 
