@@ -7,6 +7,6 @@ pub mod types {
 
 pub mod save_candid;
 
-pub mod functions;
+pub mod utils;
 
 pub mod whitelist;

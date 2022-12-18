@@ -2,7 +2,7 @@ use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::{ api::time };
 use lib::{
 	types::{ api_error::ApiError, asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset } },
-	functions::{ get_nested_child_assets },
+	utils::get_nested_child_assets,
 };
 use std::{ cell::RefCell, collections::HashMap };
 
@@ -174,7 +174,7 @@ impl AssetsStore {
 
 				// Get all child + nested assets that will be deleted
 				let mut assets_to_delete = get_nested_child_assets(&user_assets, &delete_asset_id);
-				// Include the asset_id for the for loop
+				// Include the asset_id (selected asset to be deleted)
 				assets_to_delete.push(delete_asset_id);
 
 				// Retain/keep if the current id is not included in the assets_to_delete list

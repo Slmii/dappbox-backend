@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use candid::{ candid_method, Principal };
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update };
-use lib::{
-	types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } },
-	functions::{ validate_anonymous, validate_admin },
-};
+use lib::{ types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } }, utils::{ validate_anonymous, validate_admin } };
 
 use crate::chunks_store::{ ChunksStore, STATE };
 

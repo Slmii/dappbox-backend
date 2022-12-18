@@ -2,7 +2,7 @@ use crate::users_store::{ UsersStore, STATE };
 use candid::candid_method;
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update };
-use lib::{ types::{ api_error::ApiError, user::User }, functions::{ validate_anonymous, validate_admin } };
+use lib::{ types::{ api_error::ApiError, user::User }, utils::{ validate_anonymous, validate_admin } };
 
 #[pre_upgrade]
 fn pre_upgrade() {
