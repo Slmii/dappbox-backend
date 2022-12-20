@@ -93,7 +93,7 @@ impl AssetsStore {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
-			// Find all user_assets linked to the principal
+			// Find all user_assets linked to the principal (caller)
 			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
 			// Find a specific asset with given value
 			let asset_id = user_asset_ids.into_iter().find(|&asset_id| asset_id == edit_asset.id);
@@ -136,7 +136,7 @@ impl AssetsStore {
 			let mut state = state.borrow_mut();
 			let mut temp: Vec<Asset> = vec![];
 
-			// Find all user_assets linked to the principal
+			// Find all user_assets linked to the principal (caller)
 			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
 
 			for move_asset in move_assets {
@@ -173,7 +173,7 @@ impl AssetsStore {
 			for delete_asset_id in delete_asset_ids {
 				let mut state = state.borrow_mut();
 
-				// Find all assets linked to the principal
+				// Find all assets linked to the principal (caller)
 				let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
 
 				// Check if the Vec has the asset_id that must be removed

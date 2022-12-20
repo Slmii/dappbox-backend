@@ -9,9 +9,8 @@ pub struct ChunksStore {
 	pub canister_owner: Principal,
 	// Increment of chunk IDs
 	pub chunk_id: u32,
-	// Blobs (u8) of the chunks. u32 = chunk_id
+	// Blobs (u8) of the chunks. u32 = chunk_id, Principal = caller
 	pub chunks: HashMap<(u32, Principal), Vec<u8>>,
-	// TODO: also need a shared chunks?
 }
 
 impl Default for ChunksStore {
@@ -41,7 +40,7 @@ impl ChunksStore {
 		STATE.with(|state| {
 			let state = state.borrow();
 
-			// Get chunks linked to the chunk ID and principal
+			// Get chunks linked to the chunk ID and principal (caller)
 			let opt_chunks = state.chunks.get(&(chunk_id, principal));
 
 			if let Some(chunks) = opt_chunks {
@@ -60,7 +59,7 @@ impl ChunksStore {
 			state.chunk_id += 1;
 			let chunk_id = state.chunk_id;
 
-			// Add chunk linked to the chunk and principal
+			// Add chunk linked to the chunk and principal (caller)
 			state.chunks.insert((chunk_id, principal), post_chunk.blob);
 
 			Chunk {
