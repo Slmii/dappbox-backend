@@ -1,7 +1,11 @@
 use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::{ api::time };
 use lib::{
-	types::{ api_error::ApiError, asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset } },
+	types::{
+		api_error::ApiError,
+		asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset, SharedWith },
+		invite::Invite,
+	},
 	utils::get_nested_child_assets,
 };
 use std::{ cell::RefCell, collections::HashMap };
@@ -12,12 +16,15 @@ pub struct AssetsStore {
 	pub asset_id: u32,
 	// All assets
 	pub assets: HashMap<u32, Asset>,
-	// User assets. u32 = asset_id
+	// Caller's assets. Principal = caller, u32 = asset_id
 	pub user_assets: HashMap<Principal, Vec<u32>>,
-	// // Shared assets
-	// pub shared_assets: HashMap<Principal, Vec<u32>>,
-	// // Shared assets with users
-	// pub shared_assets_with: HashMap<u32, Vec<(Principal, String)>>,
+	// Asset invitations. User has invited you to shared his asset
+	// Example: User A sends an invite to User B to have acces to User A's asset
+	pub asset_invites: HashMap<Principal, Invite>,
+	// Shared assets that are not caller's assets, but is granted access to. Principal = caller, u32 = asset_id
+	pub shared: HashMap<Principal, Vec<u32>>,
+	// List of people that have access to caller's assets. Principal = caller, u32 = asset_id
+	pub shared_with: HashMap<(Principal, u32), Vec<SharedWith>>,
 }
 
 thread_local! {
@@ -68,6 +75,7 @@ impl AssetsStore {
 				extension: post_asset.extension,
 				mime_type: post_asset.mime_type,
 				chunks: post_asset.chunks,
+				settings: post_asset.settings,
 				created_at: time(),
 				updated_at: time(),
 			};
@@ -75,6 +83,7 @@ impl AssetsStore {
 			// Add new asset
 			state.assets.insert(asset_id, new_asset.clone());
 			state.user_assets.entry(principal).or_default().push(asset_id);
+			// TODO: loop through principals and add invite to 'asset_invites' -> HashMap<InvitedUserPrincipal, Invite>. If 'InvitedUserPrincipal' exists in HashMap then append new invite
 
 			new_asset
 		})
@@ -192,4 +201,11 @@ impl AssetsStore {
 			Ok(temp)
 		})
 	}
+
+	// TODO: get_shared_assets(principal) -> exactly the same as 'get_user_assets' but then for shared_assets
+	// TODO: get_shared_with(principal, id) -> get a list of people with who my asset is shared with -> have option to invoke
+	// TODO: get_invites(principal)
+	// TODO: accept_invite(principal, id) -> check if invite exists -> check if invite is expired -> check if asset exists -> check if asset is Privacy::Private -> add asset to 'shared' HashMap -> add user to 'shared_with' HashMap
+	// TODO: decline_invite(principal, id) -> check if invite exists -> check if invite is expired -> decline
+	// TODO: get_public_asset(id) -> check if asset exists -> check if asset is public -> return asset -> view asset in front-end (in dialog?)
 }

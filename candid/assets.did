@@ -2,6 +2,7 @@ type ApiError = variant {
   NotFound : text;
   Unauthorized : text;
   AlreadyExists : text;
+  CanisterFailed : CanisterFailedError;
 };
 type Asset = record {
   id : nat32;
@@ -14,10 +15,12 @@ type Asset = record {
   user_id : principal;
   is_favorite : bool;
   parent_id : opt nat32;
+  settings : Settings;
   chunks : vec Chunk;
   extension : text;
 };
 type AssetType = variant { Folder; File };
+type CanisterFailedError = record { code : RejectionCode; message : text };
 type Chunk = record { id : nat32; canister : principal; index : nat32 };
 type EditAsset = record {
   id : nat32;
@@ -34,12 +37,24 @@ type PostAsset = record {
   mime_type : text;
   user_id : principal;
   parent_id : opt nat32;
+  settings : Settings;
   chunks : vec Chunk;
   extension : text;
+};
+type Privacy = variant { Private; Public };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
 };
 type Result = variant { Ok : Asset; Err : ApiError };
 type Result_1 = variant { Ok : vec nat32; Err : ApiError };
 type Result_2 = variant { Ok : vec Asset; Err : ApiError };
+type Settings = record { url : opt text; privacy : Privacy };
 service : {
   add_asset : (PostAsset) -> (Result);
   delete_assets : (vec nat32) -> (Result_1);

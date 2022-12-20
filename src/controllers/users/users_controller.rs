@@ -28,19 +28,39 @@ fn get_users() -> Result<Vec<User>, ApiError> {
 	}
 }
 
+#[query]
+#[candid_method(query)]
+fn get_chunks_wasm() -> Vec<u8> {
+	match validate_admin(&caller()) {
+		Ok(_) => STATE.with(|state| state.borrow().chunks_wasm.clone()),
+		Err(_) => vec![],
+	}
+}
+
+// #[update]
+// #[candid_method(update)]
+// fn upload_chunks_wasm(chunks_wasm: Vec<u8>) {
+// 	STATE.with(|state| {
+// 		state.borrow_mut().chunks_wasm = chunks_wasm;
+// 	})
+// }
+
 // ========== Non-admin calls
 
 #[query]
 #[candid_method(query)]
 fn get_user() -> Result<User, ApiError> {
-	UsersStore::get_user(caller())
+	match validate_anonymous(&caller()) {
+		Ok(principal) => UsersStore::get_user(principal),
+		Err(err) => Err(err),
+	}
 }
 
 #[update]
 #[candid_method(update)]
-fn create_user(username: Option<String>) -> Result<User, ApiError> {
+async fn create_user(username: Option<String>) -> Result<User, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => UsersStore::create_user(principal, username),
+		Ok(principal) => UsersStore::create_user(principal, username).await,
 		Err(err) => Err(err),
 	}
 }

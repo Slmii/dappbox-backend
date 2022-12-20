@@ -16,3 +16,5 @@ src/declarations/
 # misc
 target/
 .dfx/
+.history
+scripts/chunks.wasm

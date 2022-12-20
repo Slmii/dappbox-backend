@@ -2,6 +2,17 @@ type ApiError = variant {
   NotFound : text;
   Unauthorized : text;
   AlreadyExists : text;
+  CanisterFailed : CanisterFailedError;
+};
+type CanisterFailedError = record { code : RejectionCode; message : text };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
 };
 type Result = variant { Ok : User; Err : ApiError };
 type Result_1 = variant { Ok : vec User; Err : ApiError };
@@ -12,6 +23,7 @@ type User = record {
 };
 service : {
   create_user : (opt text) -> (Result);
+  get_chunks_wasm : () -> (vec nat8) query;
   get_user : () -> (Result) query;
   get_users : () -> (Result_1) query;
 }

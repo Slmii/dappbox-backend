@@ -1,4 +1,4 @@
-use super::chunk::Chunk;
+use super::{ chunk::Chunk, settings::Settings };
 use candid::{ CandidType, Deserialize, Principal };
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -15,6 +15,7 @@ pub struct Asset {
 	pub created_at: u64,
 	pub updated_at: u64,
 	pub chunks: Vec<Chunk>,
+	pub settings: Settings,
 }
 
 impl Default for Asset {
@@ -32,6 +33,7 @@ impl Default for Asset {
 			created_at: Default::default(),
 			updated_at: Default::default(),
 			chunks: Default::default(),
+			settings: Default::default(),
 		}
 	}
 }
@@ -46,6 +48,7 @@ pub struct PostAsset {
 	pub extension: String,
 	pub mime_type: String,
 	pub chunks: Vec<Chunk>,
+	pub settings: Settings,
 }
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -61,6 +64,12 @@ pub struct EditAsset {
 pub struct MoveAsset {
 	pub id: u32,
 	pub parent_id: Option<u32>,
+}
+
+#[derive(CandidType, Clone, Deserialize)]
+pub struct SharedWith {
+	pub principal: Principal,
+	pub username: Option<String>,
 }
 
 #[derive(CandidType, Clone, Deserialize)]

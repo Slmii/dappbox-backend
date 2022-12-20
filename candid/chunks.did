@@ -2,16 +2,27 @@ type ApiError = variant {
   NotFound : text;
   Unauthorized : text;
   AlreadyExists : text;
+  CanisterFailed : CanisterFailedError;
 };
+type CanisterFailedError = record { code : RejectionCode; message : text };
 type Chunk = record { id : nat32; canister : principal; index : nat32 };
 type PostChunk = record { "blob" : vec nat8; index : nat32 };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
 type Result = variant { Ok : Chunk; Err : ApiError };
 type Result_1 = variant {
   Ok : vec record { record { nat32; principal }; vec nat8 };
   Err : ApiError;
 };
 type Result_2 = variant { Ok : vec nat8; Err : ApiError };
-service : {
+service : (opt principal) -> {
   add_chunk : (PostChunk) -> (Result);
   get_chunks : () -> (Result_1) query;
   get_chunks_by_chunk_id : (nat32) -> (Result_2) query;

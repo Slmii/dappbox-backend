@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use candid::{ candid_method, Principal };
 use ic_cdk::{ caller, storage };
-use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update };
+use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update, init };
 use lib::{ types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } }, utils::{ validate_anonymous, validate_admin } };
 
 use crate::chunks_store::{ ChunksStore, STATE };
@@ -49,6 +49,16 @@ fn add_chunk(chunk: PostChunk) -> Result<Chunk, ApiError> {
 		Ok(principal) => Ok(ChunksStore::add_chunk(principal, chunk)),
 		Err(err) => Err(err),
 	}
+}
+
+#[init]
+#[candid_method(init)]
+fn init(canister_owner: Option<Principal>) {
+	STATE.with(|state| {
+		if let Some(canister_owner) = canister_owner {
+			state.borrow_mut().canister_owner = canister_owner;
+		}
+	});
 }
 
 #[test]
