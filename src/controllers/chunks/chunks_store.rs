@@ -5,6 +5,7 @@ use std::{ cell::RefCell, collections::HashMap };
 
 #[derive(CandidType, Clone, Deserialize)]
 pub struct ChunksStore {
+	// Caller's principal
 	pub canister_owner: Principal,
 	// Increment of chunk IDs
 	pub chunk_id: u32,
