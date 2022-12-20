@@ -40,6 +40,10 @@ impl ChunksStore {
 		STATE.with(|state| {
 			let state = state.borrow();
 
+			if principal != state.canister_owner {
+				return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
+			}
+
 			// Get chunks linked to the chunk ID and principal (caller)
 			let opt_chunks = state.chunks.get(&(chunk_id, principal));
 
@@ -51,9 +55,13 @@ impl ChunksStore {
 		})
 	}
 
-	pub fn add_chunk(principal: Principal, post_chunk: PostChunk) -> Chunk {
+	pub fn add_chunk(principal: Principal, post_chunk: PostChunk) -> Result<Chunk, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
+
+			if principal != state.canister_owner {
+				return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
+			}
 
 			// Increment asset chunk ID
 			state.chunk_id += 1;
@@ -62,11 +70,11 @@ impl ChunksStore {
 			// Add chunk linked to the chunk and principal (caller)
 			state.chunks.insert((chunk_id, principal), post_chunk.blob);
 
-			Chunk {
+			Ok(Chunk {
 				id: chunk_id,
 				index: post_chunk.index,
 				canister: id(),
-			}
+			})
 		})
 	}
 }

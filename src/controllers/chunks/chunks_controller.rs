@@ -46,7 +46,7 @@ fn get_chunks_by_chunk_id(chunk_id: u32) -> Result<Vec<u8>, ApiError> {
 #[candid_method(update)]
 fn add_chunk(chunk: PostChunk) -> Result<Chunk, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => Ok(ChunksStore::add_chunk(principal, chunk)),
+		Ok(principal) => ChunksStore::add_chunk(principal, chunk),
 		Err(err) => Err(err),
 	}
 }
