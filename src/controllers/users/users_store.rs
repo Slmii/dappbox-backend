@@ -9,7 +9,6 @@ use std::{ cell::RefCell, collections::HashMap };
 #[derive(CandidType, Clone, Deserialize, Default)]
 pub struct UsersStore {
 	pub users: HashMap<Principal, User>,
-	pub user_canisters: HashMap<Principal, Vec<Principal>>,
 	pub chunks_wasm: Vec<u8>,
 }
 
@@ -47,6 +46,7 @@ impl UsersStore {
 				user_id: principal,
 				username,
 				created_at: time(),
+				canisters: vec![],
 			};
 
 			state.users.insert(principal, user_to_add.clone());
@@ -58,11 +58,22 @@ impl UsersStore {
 			// If user is created
 			Ok(user) => {
 				// Create new canister
-				let created_canister = Self::create_chunks_canister(principal).await;
+				let canister_principal = Self::create_chunks_canister(principal).await;
 
-				match created_canister {
+				match canister_principal {
 					// If canister is created
-					Ok(_) => Ok(user),
+					Ok(canister_principal) => {
+						// Add the created canister principal to user field 'canisters'
+						STATE.with(|state| {
+							let mut state = state.borrow_mut();
+
+							if let Some(user) = state.users.get_mut(&user.user_id) {
+								user.canisters.push(canister_principal);
+							}
+
+							Ok(user)
+						})
+					}
 					// If not then throw the received error
 					Err(err) => Err(err),
 				}
@@ -72,7 +83,7 @@ impl UsersStore {
 		}
 	}
 
-	async fn create_chunks_canister(principal: Principal) -> Result<String, ApiError> {
+	async fn create_chunks_canister(principal: Principal) -> Result<Principal, ApiError> {
 		let canister_settings = CanisterSettings {
 			controllers: Some(vec![caller(), id()]),
 			compute_allocation: None,
@@ -90,17 +101,7 @@ impl UsersStore {
 
 				// If WASM installation is successfull
 				match wasm_result {
-					Ok(_) => {
-						STATE.with(|state|
-							state
-								.borrow_mut()
-								.user_canisters.entry(principal)
-								.or_default()
-								.push(CanisterID::from(canister))
-						);
-
-						Ok("WASM successfully installed".to_string())
-					}
+					Ok(_) => Ok(CanisterID::from(canister)),
 					Err(error) =>
 						Err(
 							ApiError::CanisterFailed(CanisterFailedError {
