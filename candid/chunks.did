@@ -22,8 +22,10 @@ type Result_1 = variant {
   Err : ApiError;
 };
 type Result_2 = variant { Ok : vec nat8; Err : ApiError };
+type Result_3 = variant { Ok : nat64; Err : ApiError };
 service : (opt principal) -> {
   add_chunk : (PostChunk) -> (Result);
   get_chunks : () -> (Result_1) query;
   get_chunks_by_chunk_id : (nat32) -> (Result_2) query;
+  get_size : () -> (Result_3) query;
 }
