@@ -19,7 +19,7 @@ thread_local! {
 impl UsersStore {
 	// ========== Admin calls
 
-	pub fn get_users() -> Vec<User> {
+	pub fn get_all_users() -> Vec<User> {
 		STATE.with(|state| state.borrow().users.values().cloned().collect())
 	}
 

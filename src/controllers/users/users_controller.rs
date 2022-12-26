@@ -32,9 +32,9 @@ fn get_state() -> Result<HashMap<Principal, User>, ApiError> {
 
 #[query]
 #[candid_method(query)]
-fn get_users() -> Result<Vec<User>, ApiError> {
+fn get_all_users() -> Result<Vec<User>, ApiError> {
 	match validate_admin(&caller()) {
-		Ok(_) => Ok(UsersStore::get_users()),
+		Ok(_) => Ok(UsersStore::get_all_users()),
 		Err(err) => Err(err),
 	}
 }
