@@ -23,6 +23,19 @@ impl UsersStore {
 		STATE.with(|state| state.borrow().users.values().cloned().collect())
 	}
 
+	pub fn get_user_canisters() -> HashMap<Principal, Vec<Principal>> {
+		STATE.with(|state| {
+			let state = state.borrow();
+			let mut result = HashMap::new();
+
+			for (principal, user) in state.users.iter() {
+				result.insert(principal.clone(), user.canisters.clone());
+			}
+
+			result
+		})
+	}
+
 	// ========== Non-admin calls
 
 	pub fn get_user(principal: Principal) -> Result<User, ApiError> {

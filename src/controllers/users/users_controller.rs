@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use crate::users_store::{ UsersStore, STATE };
-use candid::candid_method;
+use candid::{ candid_method, Principal };
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update };
 use lib::{ types::{ api_error::ApiError, user::User }, utils::{ validate_anonymous, validate_admin } };
@@ -24,6 +26,15 @@ fn post_upgrade() {
 fn get_users() -> Result<Vec<User>, ApiError> {
 	match validate_admin(&caller()) {
 		Ok(_) => Ok(UsersStore::get_users()),
+		Err(err) => Err(err),
+	}
+}
+
+#[query]
+#[candid_method(query)]
+fn get_user_canisters() -> Result<HashMap<Principal, Vec<Principal>>, ApiError> {
+	match validate_admin(&caller()) {
+		Ok(_) => Ok(UsersStore::get_user_canisters()),
 		Err(err) => Err(err),
 	}
 }

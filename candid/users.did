@@ -15,7 +15,11 @@ type RejectionCode = variant {
   CanisterReject;
 };
 type Result = variant { Ok : User; Err : ApiError };
-type Result_1 = variant { Ok : vec User; Err : ApiError };
+type Result_1 = variant {
+  Ok : vec record { principal; vec principal };
+  Err : ApiError;
+};
+type Result_2 = variant { Ok : vec User; Err : ApiError };
 type User = record {
   username : opt text;
   created_at : nat64;
@@ -26,5 +30,6 @@ service : {
   create_user : (opt text) -> (Result);
   get_chunks_wasm : () -> (vec nat8) query;
   get_user : () -> (Result) query;
-  get_users : () -> (Result_1) query;
+  get_user_canisters : () -> (Result_1) query;
+  get_users : () -> (Result_2) query;
 }
