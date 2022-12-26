@@ -20,6 +20,14 @@ type Asset = record {
   extension : text;
 };
 type AssetType = variant { Folder; File };
+type AssetsStore = record {
+  shared : vec record { principal; vec nat32 };
+  assets : vec record { nat32; Asset };
+  user_assets : vec record { principal; vec nat32 };
+  asset_invites : vec record { principal; Invite };
+  asset_id : nat32;
+  shared_with : vec record { record { principal; nat32 }; vec SharedWith };
+};
 type CanisterFailedError = record { code : RejectionCode; message : text };
 type Chunk = record { id : nat32; canister : principal; index : nat32 };
 type EditAsset = record {
@@ -29,6 +37,14 @@ type EditAsset = record {
   parent_id : opt nat32;
   extension : opt text;
 };
+type Invite = record {
+  status : InviteStatus;
+  invited_by_username : opt text;
+  asset_id : nat32;
+  invited_by_principal : principal;
+  expires_at : opt nat64;
+};
+type InviteStatus = variant { Accepted; Declined; Pending };
 type MoveAsset = record { id : nat32; parent_id : opt nat32 };
 type PostAsset = record {
   asset_type : AssetType;
@@ -54,12 +70,15 @@ type RejectionCode = variant {
 type Result = variant { Ok : Asset; Err : ApiError };
 type Result_1 = variant { Ok : vec nat32; Err : ApiError };
 type Result_2 = variant { Ok : vec Asset; Err : ApiError };
+type Result_3 = variant { Ok : AssetsStore; Err : ApiError };
 type Settings = record { url : opt text; privacy : Privacy };
+type SharedWith = record { "principal" : principal; username : opt text };
 service : {
   add_asset : (PostAsset) -> (Result);
   delete_assets : (vec nat32) -> (Result_1);
   edit_asset : (EditAsset) -> (Result);
   get_all_assets : () -> (Result_2) query;
+  get_state : () -> (Result_3) query;
   get_user_assets : () -> (Result_2) query;
   move_assets : (vec MoveAsset) -> (Result_2);
 }

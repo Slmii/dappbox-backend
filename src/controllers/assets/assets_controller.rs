@@ -24,6 +24,15 @@ fn post_upgrade() {
 
 #[query]
 #[candid_method(query)]
+fn get_state() -> Result<AssetsStore, ApiError> {
+	match validate_admin(&caller()) {
+		Ok(_) => Ok(STATE.with(|state| state.borrow().clone())),
+		Err(err) => Err(err),
+	}
+}
+
+#[query]
+#[candid_method(query)]
 fn get_all_assets() -> Result<Vec<Asset>, ApiError> {
 	match validate_admin(&caller()) {
 		Ok(_) => Ok(AssetsStore::get_all_assets()),

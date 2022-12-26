@@ -19,7 +19,8 @@ type Result_1 = variant {
   Ok : vec record { principal; vec principal };
   Err : ApiError;
 };
-type Result_2 = variant { Ok : vec User; Err : ApiError };
+type Result_2 = variant { Ok : vec record { principal; User }; Err : ApiError };
+type Result_3 = variant { Ok : vec User; Err : ApiError };
 type User = record {
   username : opt text;
   created_at : nat64;
@@ -30,6 +31,7 @@ service : {
   create_user : (opt text) -> (Result);
   get_all_chunk_canisters : () -> (Result_1) query;
   get_chunks_wasm : () -> (vec nat8) query;
+  get_state : () -> (Result_2) query;
   get_user : () -> (Result) query;
-  get_users : () -> (Result_2) query;
+  get_users : () -> (Result_3) query;
 }

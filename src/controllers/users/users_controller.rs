@@ -23,6 +23,15 @@ fn post_upgrade() {
 
 #[query]
 #[candid_method(query)]
+fn get_state() -> Result<HashMap<Principal, User>, ApiError> {
+	match validate_admin(&caller()) {
+		Ok(_) => Ok(STATE.with(|state| state.borrow().users.clone())),
+		Err(err) => Err(err),
+	}
+}
+
+#[query]
+#[candid_method(query)]
 fn get_users() -> Result<Vec<User>, ApiError> {
 	match validate_admin(&caller()) {
 		Ok(_) => Ok(UsersStore::get_users()),
