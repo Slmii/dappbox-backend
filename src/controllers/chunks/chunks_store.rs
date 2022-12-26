@@ -30,7 +30,7 @@ thread_local! {
 impl ChunksStore {
 	// ========== Admin calls
 
-	pub fn get_chunks() -> HashMap<(u32, Principal), Vec<u8>> {
+	pub fn get_all_chunks() -> HashMap<(u32, Principal), Vec<u8>> {
 		STATE.with(|state| state.borrow().chunks.clone())
 	}
 
@@ -75,6 +75,20 @@ impl ChunksStore {
 				index: post_chunk.index,
 				canister: id(),
 			})
+		})
+	}
+
+	pub fn delete_chunks(principal: Principal, delete_chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+		STATE.with(|state| {
+			let mut state = state.borrow_mut();
+
+			if principal != state.canister_owner {
+				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
+			}
+
+			state.chunks.retain(|(chunk_id, _), _| !delete_chunk_ids.contains(chunk_id));
+
+			Ok(delete_chunk_ids)
 		})
 	}
 }

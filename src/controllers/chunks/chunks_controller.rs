@@ -27,9 +27,18 @@ fn post_upgrade() {
 
 #[query]
 #[candid_method(query)]
-fn get_chunks() -> Result<HashMap<(u32, Principal), Vec<u8>>, ApiError> {
+fn get_state() -> Result<ChunksStore, ApiError> {
 	match validate_admin(&caller()) {
-		Ok(_) => Ok(ChunksStore::get_chunks()),
+		Ok(_) => Ok(STATE.with(|state| state.borrow().clone())),
+		Err(err) => Err(err),
+	}
+}
+
+#[query]
+#[candid_method(query)]
+fn get_all_chunks() -> Result<HashMap<(u32, Principal), Vec<u8>>, ApiError> {
+	match validate_admin(&caller()) {
+		Ok(_) => Ok(ChunksStore::get_all_chunks()),
 		Err(err) => Err(err),
 	}
 }
@@ -63,12 +72,21 @@ fn add_chunk(chunk: PostChunk) -> Result<Chunk, ApiError> {
 	}
 }
 
+#[update]
+#[candid_method(update)]
+fn delete_chunks(chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+	match validate_anonymous(&caller()) {
+		Ok(principal) => ChunksStore::delete_chunks(principal, chunk_ids),
+		Err(err) => Err(err),
+	}
+}
+
 #[init]
 #[candid_method(init)]
 fn init(canister_owner: Option<Principal>) {
 	STATE.with(|state| {
-		if let Some(canister_owner) = canister_owner {
-			state.borrow_mut().canister_owner = canister_owner;
+		if let Some(owner) = canister_owner {
+			state.borrow_mut().canister_owner = owner;
 		}
 	});
 }

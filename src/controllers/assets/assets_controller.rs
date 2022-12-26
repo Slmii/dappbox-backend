@@ -24,9 +24,9 @@ fn post_upgrade() {
 
 #[query]
 #[candid_method(query)]
-fn get_assets() -> Result<Vec<Asset>, ApiError> {
+fn get_all_assets() -> Result<Vec<Asset>, ApiError> {
 	match validate_admin(&caller()) {
-		Ok(_) => Ok(AssetsStore::get_assets()),
+		Ok(_) => Ok(AssetsStore::get_all_assets()),
 		Err(err) => Err(err),
 	}
 }

@@ -32,9 +32,9 @@ fn get_users() -> Result<Vec<User>, ApiError> {
 
 #[query]
 #[candid_method(query)]
-fn get_user_canisters() -> Result<HashMap<Principal, Vec<Principal>>, ApiError> {
+fn get_all_chunk_canisters() -> Result<HashMap<Principal, Vec<Principal>>, ApiError> {
 	match validate_admin(&caller()) {
-		Ok(_) => Ok(UsersStore::get_user_canisters()),
+		Ok(_) => Ok(UsersStore::get_all_chunk_canisters()),
 		Err(err) => Err(err),
 	}
 }

@@ -6,6 +6,11 @@ type ApiError = variant {
 };
 type CanisterFailedError = record { code : RejectionCode; message : text };
 type Chunk = record { id : nat32; canister : principal; index : nat32 };
+type ChunksStore = record {
+  canister_owner : principal;
+  chunk_id : nat32;
+  chunks : vec record { record { nat32; principal }; vec nat8 };
+};
 type PostChunk = record { "blob" : vec nat8; index : nat32 };
 type RejectionCode = variant {
   NoError;
@@ -17,15 +22,19 @@ type RejectionCode = variant {
   CanisterReject;
 };
 type Result = variant { Ok : Chunk; Err : ApiError };
-type Result_1 = variant {
+type Result_1 = variant { Ok : vec nat32; Err : ApiError };
+type Result_2 = variant {
   Ok : vec record { record { nat32; principal }; vec nat8 };
   Err : ApiError;
 };
-type Result_2 = variant { Ok : vec nat8; Err : ApiError };
-type Result_3 = variant { Ok : nat64; Err : ApiError };
+type Result_3 = variant { Ok : vec nat8; Err : ApiError };
+type Result_4 = variant { Ok : nat64; Err : ApiError };
+type Result_5 = variant { Ok : ChunksStore; Err : ApiError };
 service : (opt principal) -> {
   add_chunk : (PostChunk) -> (Result);
-  get_chunks : () -> (Result_1) query;
-  get_chunks_by_chunk_id : (nat32) -> (Result_2) query;
-  get_size : () -> (Result_3) query;
+  delete_chunks : (vec nat32) -> (Result_1);
+  get_all_chunks : () -> (Result_2) query;
+  get_chunks_by_chunk_id : (nat32) -> (Result_3) query;
+  get_size : () -> (Result_4) query;
+  get_state : () -> (Result_5) query;
 }

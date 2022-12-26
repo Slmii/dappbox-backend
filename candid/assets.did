@@ -59,7 +59,7 @@ service : {
   add_asset : (PostAsset) -> (Result);
   delete_assets : (vec nat32) -> (Result_1);
   edit_asset : (EditAsset) -> (Result);
-  get_assets : () -> (Result_2) query;
+  get_all_assets : () -> (Result_2) query;
   get_user_assets : () -> (Result_2) query;
   move_assets : (vec MoveAsset) -> (Result_2);
 }

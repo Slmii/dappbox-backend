@@ -34,7 +34,7 @@ thread_local! {
 impl AssetsStore {
 	// ========== Admin calls
 
-	pub fn get_assets() -> Vec<Asset> {
+	pub fn get_all_assets() -> Vec<Asset> {
 		STATE.with(|state| state.borrow().assets.values().cloned().collect())
 	}
 
@@ -193,7 +193,6 @@ impl AssetsStore {
 					.unwrap_or_default()
 					.retain(|&id| !assets_to_delete.contains(&id));
 				state.assets.retain(|&id, _| !assets_to_delete.contains(&id));
-				// TODO: also delete chunks
 
 				temp.extend(assets_to_delete);
 			}

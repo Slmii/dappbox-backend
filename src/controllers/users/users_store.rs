@@ -23,7 +23,7 @@ impl UsersStore {
 		STATE.with(|state| state.borrow().users.values().cloned().collect())
 	}
 
-	pub fn get_user_canisters() -> HashMap<Principal, Vec<Principal>> {
+	pub fn get_all_chunk_canisters() -> HashMap<Principal, Vec<Principal>> {
 		STATE.with(|state| {
 			let state = state.borrow();
 			let mut result = HashMap::new();
