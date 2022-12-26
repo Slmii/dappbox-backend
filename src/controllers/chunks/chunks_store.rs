@@ -60,7 +60,7 @@ impl ChunksStore {
 			let mut state = state.borrow_mut();
 
 			if principal != state.canister_owner {
-				return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
+				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
 			}
 
 			// Increment asset chunk ID
