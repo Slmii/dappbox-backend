@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use candid::{ candid_method, Principal, Nat };
-use ic_cdk::{ caller, storage, api::management_canister::{ main::canister_status, provisional::CanisterIdRecord }, id };
+use candid::{ candid_method, Principal };
+use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update, init };
 use lib::{
-	types::{ api_error::{ ApiError, CanisterFailedError }, chunk::{ Chunk, PostChunk, ChunkStoreState } },
+	types::{ api_error::{ ApiError }, chunk::{ Chunk, PostChunk, ChunkStoreState } },
 	utils::{ validate_anonymous, validate_admin },
 };
 
@@ -62,30 +62,6 @@ fn get_chunks_by_chunk_id(chunk_id: u32) -> Result<Vec<u8>, ApiError> {
 	match validate_anonymous(&caller()) {
 		Ok(principal) => ChunksStore::get_chunks_by_chunk_id(chunk_id, principal),
 		Err(err) => Err(err),
-	}
-}
-
-#[update]
-#[candid_method(update)]
-async fn get_size() -> Result<Nat, ApiError> {
-	match validate_anonymous(&caller()) {
-		Ok(_) => {
-			let status = canister_status(CanisterIdRecord {
-				canister_id: id(),
-			}).await;
-
-			match status {
-				Ok(status) => Ok(status.0.memory_size),
-				Err(error) =>
-					Err(
-						ApiError::CanisterFailed(CanisterFailedError {
-							code: error.0,
-							message: error.1,
-						})
-					),
-			}
-		}
-		Err(error) => Err(error),
 	}
 }
 
