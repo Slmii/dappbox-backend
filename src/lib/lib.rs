@@ -5,6 +5,7 @@ pub mod types {
 	pub mod user;
 	pub mod settings;
 	pub mod invite;
+	pub mod nft;
 }
 
 pub mod save_candid;

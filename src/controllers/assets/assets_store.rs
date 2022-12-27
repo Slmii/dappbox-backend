@@ -75,6 +75,7 @@ impl AssetsStore {
 				mime_type: post_asset.mime_type,
 				chunks: post_asset.chunks,
 				settings: post_asset.settings,
+				nft: post_asset.nft,
 				created_at: time(),
 				updated_at: time(),
 			};

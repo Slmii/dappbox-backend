@@ -6,6 +6,7 @@ type ApiError = variant {
 };
 type Asset = record {
   id : nat32;
+  nft : opt Nft;
   updated_at : nat64;
   asset_type : AssetType;
   name : text;
@@ -46,7 +47,9 @@ type Invite = record {
 };
 type InviteStatus = variant { Accepted; Declined; Pending };
 type MoveAsset = record { id : nat32; parent_id : opt nat32 };
+type Nft = record { "principal" : principal; index : nat32 };
 type PostAsset = record {
+  nft : opt Nft;
   asset_type : AssetType;
   name : text;
   size : nat32;
