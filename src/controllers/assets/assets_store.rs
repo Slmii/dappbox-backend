@@ -6,9 +6,8 @@ use lib::{
 		asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset, SharedWith },
 		invite::Invite,
 	},
-	utils::get_nested_child_assets,
 };
-use std::{ cell::RefCell, collections::HashMap };
+use std::{ cell::RefCell, collections::{ HashMap, HashSet } };
 
 #[derive(CandidType, Clone, Deserialize, Default)]
 pub struct AssetsStore {
@@ -166,38 +165,26 @@ impl AssetsStore {
 
 	pub fn delete_assets(principal: Principal, delete_asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 		STATE.with(|state| {
-			let user_assets = Self::get_user_assets(principal);
+			let mut state = state.borrow_mut();
 
-			let mut temp: Vec<u32> = vec![];
+			// Find all assets linked to the principal (caller)
+			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
 
-			for delete_asset_id in delete_asset_ids {
-				let mut state = state.borrow_mut();
+			let source_set: HashSet<u32> = delete_asset_ids.iter().cloned().collect();
+			let target_set: HashSet<u32> = user_asset_ids.iter().cloned().collect();
 
-				// Find all assets linked to the principal (caller)
-				let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
-
-				// Check if the Vec has the asset_id that must be removed
-				if !user_asset_ids.contains(&delete_asset_id) {
-					return Err(ApiError::NotFound("ASSET_NOT_FOUND".to_string()));
-				}
-
-				// Get all child + nested assets that will be deleted
-				let mut assets_to_delete = get_nested_child_assets(&user_assets, &delete_asset_id);
-				// Include the asset_id (selected asset to be deleted)
-				assets_to_delete.push(delete_asset_id);
-
-				// Retain/keep if the current id is not included in the assets_to_delete list
-				state.user_assets
-					.get_mut(&principal)
-					.cloned()
-					.unwrap_or_default()
-					.retain(|&id| !assets_to_delete.contains(&id));
-				state.assets.retain(|&id, _| !assets_to_delete.contains(&id));
-
-				temp.extend(assets_to_delete);
+			if !source_set.is_subset(&target_set) {
+				return Err(ApiError::NotFound("ASSET_NOT_FOUND".to_string()));
 			}
 
-			Ok(temp)
+			state.user_assets
+				.get_mut(&principal)
+				.cloned()
+				.unwrap_or_default()
+				.retain(|&id| !delete_asset_ids.contains(&id));
+			state.assets.retain(|&id, _| !delete_asset_ids.contains(&id));
+
+			Ok(delete_asset_ids)
 		})
 	}
 
