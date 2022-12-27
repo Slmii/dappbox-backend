@@ -48,7 +48,7 @@ impl UsersStore {
 	}
 
 	pub async fn create_user(principal: Principal, username: Option<String>) -> Result<User, ApiError> {
-		let user = STATE.with(|state| {
+		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
 			if state.users.contains_key(&principal) {
@@ -65,35 +65,35 @@ impl UsersStore {
 			state.users.insert(principal, user_to_add.clone());
 
 			Ok(user_to_add.clone())
-		});
+		})
 
-		match user {
-			// If user is created
-			Ok(user) => {
-				// Create new canister
-				let canister_principal = Self::create_chunks_canister(principal).await;
+		// match user {
+		// 	// If user is created
+		// 	Ok(user) => {
+		// 		// Create new canister
+		// 		let canister_principal = Self::create_chunks_canister(principal).await;
 
-				match canister_principal {
-					// If canister is created
-					Ok(canister_principal) => {
-						// Add the created canister principal to user field 'canisters'
-						STATE.with(|state| {
-							let mut state = state.borrow_mut();
+		// 		match canister_principal {
+		// 			// If canister is created
+		// 			Ok(canister_principal) => {
+		// 				// Add the created canister principal to user field 'canisters'
+		// 				STATE.with(|state| {
+		// 					let mut state = state.borrow_mut();
 
-							if let Some(user) = state.users.get_mut(&user.user_id) {
-								user.canisters.push(canister_principal);
-							}
+		// 					if let Some(user) = state.users.get_mut(&user.user_id) {
+		// 						user.canisters.push(canister_principal);
+		// 					}
 
-							Ok(user)
-						})
-					}
-					// If not then throw the received error
-					Err(err) => Err(err),
-				}
-			}
-			// If not then throw the received error
-			Err(error) => Err(error),
-		}
+		// 					Ok(user)
+		// 				})
+		// 			}
+		// 			// If not then throw the received error
+		// 			Err(err) => Err(err),
+		// 		}
+		// 	}
+		// 	// If not then throw the received error
+		// 	Err(error) => Err(error),
+		// }
 	}
 
 	async fn create_chunks_canister(principal: Principal) -> Result<Principal, ApiError> {
