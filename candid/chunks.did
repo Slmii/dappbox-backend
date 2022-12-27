@@ -6,10 +6,10 @@ type ApiError = variant {
 };
 type CanisterFailedError = record { code : RejectionCode; message : text };
 type Chunk = record { id : nat32; canister : principal; index : nat32 };
-type ChunksStore = record {
+type ChunkStoreState = record {
   canister_owner : principal;
   chunk_id : nat32;
-  chunks : vec record { record { nat32; principal }; vec nat8 };
+  chunks : vec record { nat32; principal };
 };
 type PostChunk = record { "blob" : vec nat8; index : nat32 };
 type RejectionCode = variant {
@@ -29,7 +29,7 @@ type Result_2 = variant {
 };
 type Result_3 = variant { Ok : vec nat8; Err : ApiError };
 type Result_4 = variant { Ok : nat64; Err : ApiError };
-type Result_5 = variant { Ok : ChunksStore; Err : ApiError };
+type Result_5 = variant { Ok : ChunkStoreState; Err : ApiError };
 service : (opt principal) -> {
   add_chunk : (PostChunk) -> (Result);
   delete_chunks : (vec nat32) -> (Result_1);

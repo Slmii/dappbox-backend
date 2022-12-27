@@ -4,7 +4,7 @@ use candid::{ candid_method, Principal };
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update, init };
 use lib::{
-	types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } },
+	types::{ api_error::ApiError, chunk::{ Chunk, PostChunk, ChunkStoreState } },
 	utils::{ validate_anonymous, validate_admin, get_heap_memory_size },
 };
 
@@ -27,9 +27,20 @@ fn post_upgrade() {
 
 #[query]
 #[candid_method(query)]
-fn get_state() -> Result<ChunksStore, ApiError> {
+fn get_state() -> Result<ChunkStoreState, ApiError> {
 	match validate_admin(&caller()) {
-		Ok(_) => Ok(STATE.with(|state| state.borrow().clone())),
+		Ok(_) =>
+			Ok(
+				STATE.with(|state| {
+					let state = state.borrow();
+
+					ChunkStoreState {
+						canister_owner: state.canister_owner,
+						chunk_id: state.chunk_id,
+						chunks: state.chunks.keys().cloned().collect(),
+					}
+				})
+			),
 		Err(err) => Err(err),
 	}
 }
