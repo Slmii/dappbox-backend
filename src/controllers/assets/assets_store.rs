@@ -177,11 +177,10 @@ impl AssetsStore {
 				return Err(ApiError::NotFound("ASSET_NOT_FOUND".to_string()));
 			}
 
-			state.user_assets
-				.get_mut(&principal)
-				.cloned()
-				.unwrap_or_default()
-				.retain(|&id| !delete_asset_ids.contains(&id));
+			if let Some(assets) = state.user_assets.get_mut(&principal) {
+				assets.retain(|&id| !delete_asset_ids.contains(&id));
+			}
+
 			state.assets.retain(|&id, _| !delete_asset_ids.contains(&id));
 
 			Ok(delete_asset_ids)
