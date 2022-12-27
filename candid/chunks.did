@@ -28,13 +28,13 @@ type Result_2 = variant {
   Err : ApiError;
 };
 type Result_3 = variant { Ok : vec nat8; Err : ApiError };
-type Result_4 = variant { Ok : nat64; Err : ApiError };
+type Result_4 = variant { Ok : nat; Err : ApiError };
 type Result_5 = variant { Ok : ChunkStoreState; Err : ApiError };
 service : (opt principal) -> {
   add_chunk : (PostChunk) -> (Result);
   delete_chunks : (vec nat32) -> (Result_1);
   get_all_chunks : () -> (Result_2) query;
   get_chunks_by_chunk_id : (nat32) -> (Result_3) query;
-  get_size : () -> (Result_4) query;
+  get_size : () -> (Result_4);
   get_state : () -> (Result_5) query;
 }
