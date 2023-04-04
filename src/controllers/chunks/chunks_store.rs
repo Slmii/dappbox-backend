@@ -40,9 +40,9 @@ impl ChunksStore {
 		STATE.with(|state| {
 			let state = state.borrow();
 
-			// if principal != state.canister_owner {
-			// 	return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
-			// }
+			if principal != state.canister_owner {
+				return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
+			}
 
 			// Get chunks linked to the chunk ID and principal (caller)
 			let opt_chunks = state.chunks.get(&(chunk_id, principal));
@@ -59,9 +59,9 @@ impl ChunksStore {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
-			// if principal != state.canister_owner {
-			// 	return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
-			// }
+			if principal != state.canister_owner {
+				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
+			}
 
 			// Increment asset chunk ID
 			state.chunk_id += 1;
@@ -83,9 +83,9 @@ impl ChunksStore {
 			let mut state = state.borrow_mut();
 			let mut removed_chunk_ids = Vec::new();
 
-			// if principal != state.canister_owner {
-			// 	return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
-			// }
+			if principal != state.canister_owner {
+				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
+			}
 
 			for id in delete_chunk_ids {
 				if state.chunks.remove(&(id, principal)).is_some() {
