@@ -6,7 +6,6 @@ type ApiError = variant {
 };
 type Asset = record {
   id : nat32;
-  nft : opt Nft;
   updated_at : nat64;
   asset_type : AssetType;
   name : text;
@@ -20,7 +19,7 @@ type Asset = record {
   chunks : vec Chunk;
   extension : text;
 };
-type AssetType = variant { Folder; File };
+type AssetType = variant { NFT : Nft; Folder; File };
 type AssetsStore = record {
   shared : vec record { principal; vec nat32 };
   assets : vec record { nat32; Asset };
@@ -49,7 +48,6 @@ type InviteStatus = variant { Accepted; Declined; Pending };
 type MoveAsset = record { id : nat32; parent_id : opt nat32 };
 type Nft = record { "principal" : principal; index : nat32 };
 type PostAsset = record {
-  nft : opt Nft;
   asset_type : AssetType;
   name : text;
   size : nat32;

@@ -16,7 +16,6 @@ pub struct Asset {
 	pub updated_at: u64,
 	pub chunks: Vec<Chunk>,
 	pub settings: Settings,
-	pub nft: Option<Nft>,
 }
 
 impl Default for Asset {
@@ -35,7 +34,6 @@ impl Default for Asset {
 			updated_at: Default::default(),
 			chunks: Default::default(),
 			settings: Default::default(),
-			nft: Default::default(),
 		}
 	}
 }
@@ -51,7 +49,6 @@ pub struct PostAsset {
 	pub mime_type: String,
 	pub chunks: Vec<Chunk>,
 	pub settings: Settings,
-	pub nft: Option<Nft>,
 }
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -79,4 +76,5 @@ pub struct SharedWith {
 pub enum AssetType {
 	Folder,
 	File,
+	NFT(Nft),
 }

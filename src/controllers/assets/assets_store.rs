@@ -75,7 +75,6 @@ impl AssetsStore {
 				mime_type: post_asset.mime_type,
 				chunks: post_asset.chunks,
 				settings: post_asset.settings,
-				nft: post_asset.nft,
 				created_at: time(),
 				updated_at: time(),
 			};
@@ -115,6 +114,9 @@ impl AssetsStore {
 							}
 						}
 						AssetType::Folder => {
+							found_asset.extension = "".to_string();
+						}
+						AssetType::NFT(_) => {
 							found_asset.extension = "".to_string();
 						}
 					}
