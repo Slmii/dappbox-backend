@@ -59,9 +59,21 @@ impl AssetsStore {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
+			let existing_asset_id = state.assets
+				.values()
+				.enumerate()
+				.find_map(|(id, asset)| {
+					if asset.name == post_asset.name && asset.user_id == principal { Some(id as u32) } else { None }
+				});
+
 			// Increment asset ID
-			state.asset_id += 1;
-			let asset_id = state.asset_id;
+			let asset_id = if let Some(id) = existing_asset_id {
+				id
+			} else {
+				// Increment asset ID
+				state.asset_id += 1;
+				state.asset_id
+			};
 
 			let new_asset = Asset {
 				id: asset_id,
@@ -79,9 +91,16 @@ impl AssetsStore {
 				updated_at: time(),
 			};
 
-			// Add new asset
+			// Add new asset or overwrite existing one
 			state.assets.insert(asset_id, new_asset.clone());
-			state.user_assets.entry(principal).or_default().push(asset_id);
+
+			// Update user_assets only if the asset was not found (i.e., it's a new asset)
+			if existing_asset_id.is_none() {
+				state.user_assets.entry(principal).or_default().push(asset_id);
+			}
+
+			// TODO: overwrite existing chunks
+
 			// TODO: loop through principals and add invite to 'asset_invites' -> HashMap<InvitedUserPrincipal, Invite>. If 'InvitedUserPrincipal' exists in HashMap then append new invite
 
 			new_asset
