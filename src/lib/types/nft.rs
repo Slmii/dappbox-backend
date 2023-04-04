@@ -1,6 +1,6 @@
 use candid::{ CandidType, Deserialize, Principal };
 
-#[derive(CandidType, Clone, Deserialize)]
+#[derive(CandidType, Clone, PartialEq, Eq, Deserialize)]
 pub struct Nft {
 	pub principal: Principal,
 	pub index: u32,

@@ -72,7 +72,7 @@ pub struct SharedWith {
 	pub username: Option<String>,
 }
 
-#[derive(CandidType, Clone, Deserialize)]
+#[derive(CandidType, Clone, Deserialize, PartialEq, Eq)]
 pub enum AssetType {
 	Folder,
 	File,

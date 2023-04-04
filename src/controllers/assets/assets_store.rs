@@ -63,11 +63,21 @@ impl AssetsStore {
 				.values()
 				.enumerate()
 				.find_map(|(id, asset)| {
-					if asset.name == post_asset.name && asset.user_id == principal { Some(id as u32) } else { None }
+					// Check if asset name, user_id and parent_id are the same
+					if
+						asset.name == post_asset.name &&
+						asset.user_id == principal &&
+						asset.parent_id == post_asset.parent_id &&
+						asset.asset_type == post_asset.asset_type
+					{
+						Some(id as u32)
+					} else {
+						None
+					}
 				});
 
-			// Increment asset ID
 			let asset_id = if let Some(id) = existing_asset_id {
+				// Use existing asset ID
 				id
 			} else {
 				// Increment asset ID
