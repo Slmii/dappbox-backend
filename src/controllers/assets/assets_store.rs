@@ -63,12 +63,13 @@ impl AssetsStore {
 				.values()
 				.enumerate()
 				.find_map(|(id, asset)| {
-					// Check if asset name, user_id and parent_id are the same
+					// Check if asset already exists
 					if
 						asset.name == post_asset.name &&
 						asset.user_id == principal &&
 						asset.parent_id == post_asset.parent_id &&
-						asset.asset_type == post_asset.asset_type
+						asset.asset_type == post_asset.asset_type &&
+						asset.mime_type == post_asset.mime_type
 					{
 						Some(id as u32)
 					} else {
@@ -108,8 +109,6 @@ impl AssetsStore {
 			if existing_asset_id.is_none() {
 				state.user_assets.entry(principal).or_default().push(asset_id);
 			}
-
-			// TODO: overwrite existing chunks
 
 			// TODO: loop through principals and add invite to 'asset_invites' -> HashMap<InvitedUserPrincipal, Invite>. If 'InvitedUserPrincipal' exists in HashMap then append new invite
 
