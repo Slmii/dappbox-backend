@@ -40,6 +40,7 @@ impl Default for Asset {
 
 #[derive(CandidType, Clone, Deserialize)]
 pub struct PostAsset {
+	pub id: Option<u32>,
 	pub user_id: Principal,
 	pub parent_id: Option<u32>,
 	pub asset_type: AssetType,

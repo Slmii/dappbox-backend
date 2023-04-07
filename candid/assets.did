@@ -48,6 +48,7 @@ type InviteStatus = variant { Accepted; Declined; Pending };
 type MoveAsset = record { id : nat32; parent_id : opt nat32 };
 type Nft = record { "principal" : principal; index : nat32 };
 type PostAsset = record {
+  id : opt nat32;
   asset_type : AssetType;
   name : text;
   size : nat32;

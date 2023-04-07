@@ -59,60 +59,53 @@ impl AssetsStore {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
-			let existing_asset_id = state.assets
-				.values()
-				.enumerate()
-				.find_map(|(id, asset)| {
-					// Check if asset already exists
-					if
-						asset.name == post_asset.name &&
-						asset.user_id == principal &&
-						asset.parent_id == post_asset.parent_id &&
-						asset.asset_type == post_asset.asset_type &&
-						asset.mime_type == post_asset.mime_type
-					{
-						Some(id as u32)
-					} else {
-						None
-					}
-				});
-
-			let asset_id = if let Some(id) = existing_asset_id {
-				// Use existing asset ID
-				id
-			} else {
-				// Increment asset ID
-				state.asset_id += 1;
-				state.asset_id
-			};
-
-			let new_asset = Asset {
-				id: asset_id,
-				user_id: principal,
-				parent_id: post_asset.parent_id,
-				asset_type: post_asset.asset_type,
-				name: post_asset.name,
-				is_favorite: false,
-				size: post_asset.size,
-				extension: post_asset.extension,
-				mime_type: post_asset.mime_type,
-				chunks: post_asset.chunks,
-				settings: post_asset.settings,
-				created_at: time(),
-				updated_at: time(),
-			};
-
-			// Add new asset or overwrite existing one
-			state.assets.insert(asset_id, new_asset.clone());
-
-			// Update user_assets only if the asset was not found (i.e., it's a new asset)
-			if existing_asset_id.is_none() {
-				state.user_assets.entry(principal).or_default().push(asset_id);
-			}
+			// Find all user_assets linked to the principal (caller)
+			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
+			// Find a specific asset with given value
+			let asset_id = user_asset_ids
+				.into_iter()
+				.find(|&asset_id| post_asset.id.filter(|id| *id == asset_id).is_some());
 
 			// TODO: loop through principals and add invite to 'asset_invites' -> HashMap<InvitedUserPrincipal, Invite>. If 'InvitedUserPrincipal' exists in HashMap then append new invite
 
-			new_asset
+			asset_id
+				.and_then(|asset_id| state.assets.get_mut(&asset_id))
+				.map(|found_asset| {
+					// Mutate values
+					found_asset.size = post_asset.size;
+					found_asset.updated_at = time();
+
+					found_asset.clone()
+				})
+				.unwrap_or_else(|| {
+					// Increment asset ID
+					state.asset_id += 1;
+					let asset_id = state.asset_id;
+
+					let new_asset = Asset {
+						id: asset_id,
+						user_id: principal,
+						parent_id: post_asset.parent_id,
+						asset_type: post_asset.asset_type,
+						name: post_asset.name,
+						is_favorite: false,
+						size: post_asset.size,
+						extension: post_asset.extension,
+						mime_type: post_asset.mime_type,
+						chunks: post_asset.chunks,
+						settings: post_asset.settings,
+						created_at: time(),
+						updated_at: time(),
+					};
+
+					// Add new asset or overwrite existing one
+					state.assets.insert(asset_id, new_asset.clone());
+
+					// Add asset to user_assets
+					state.user_assets.entry(principal).or_default().push(asset_id);
+
+					new_asset
+				})
 		})
 	}
 
