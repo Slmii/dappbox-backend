@@ -71,7 +71,7 @@ fn get_chunks_wasm() -> Vec<u8> {
 #[candid_method(query)]
 fn get_user() -> Result<User, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => UsersStore::get_user(principal),
+		Ok(caller_principal) => UsersStore::get_user(caller_principal),
 		Err(err) => Err(err),
 	}
 }
@@ -80,7 +80,7 @@ fn get_user() -> Result<User, ApiError> {
 #[candid_method(update)]
 async fn create_user(username: Option<String>) -> Result<User, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => UsersStore::create_user(principal, username).await,
+		Ok(caller_principal) => UsersStore::create_user(caller_principal, username).await,
 		Err(err) => Err(err),
 	}
 }

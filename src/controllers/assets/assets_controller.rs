@@ -46,7 +46,7 @@ fn get_all_assets() -> Result<Vec<Asset>, ApiError> {
 #[candid_method(query)]
 fn get_user_assets() -> Result<Vec<Asset>, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => Ok(AssetsStore::get_user_assets(principal)),
+		Ok(caller_principal) => Ok(AssetsStore::get_user_assets(caller_principal)),
 		Err(err) => Err(err),
 	}
 }
@@ -55,7 +55,7 @@ fn get_user_assets() -> Result<Vec<Asset>, ApiError> {
 #[candid_method(update)]
 async fn add_asset(asset: PostAsset) -> Result<Asset, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => Ok(AssetsStore::add_asset(principal, asset).await),
+		Ok(caller_principal) => Ok(AssetsStore::add_asset(caller_principal, asset).await),
 		Err(err) => Err(err),
 	}
 }
@@ -64,7 +64,7 @@ async fn add_asset(asset: PostAsset) -> Result<Asset, ApiError> {
 #[candid_method(update)]
 fn edit_asset(asset: EditAsset) -> Result<Asset, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => AssetsStore::edit_asset(principal, asset),
+		Ok(caller_principal) => AssetsStore::edit_asset(caller_principal, asset),
 		Err(err) => Err(err),
 	}
 }
@@ -73,7 +73,7 @@ fn edit_asset(asset: EditAsset) -> Result<Asset, ApiError> {
 #[candid_method(update)]
 fn move_assets(assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => AssetsStore::move_assets(principal, assets),
+		Ok(caller_principal) => AssetsStore::move_assets(caller_principal, assets),
 		Err(err) => Err(err),
 	}
 }
@@ -82,7 +82,7 @@ fn move_assets(assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
 #[candid_method(update)]
 fn delete_assets(asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => AssetsStore::delete_assets(principal, asset_ids),
+		Ok(caller_principal) => AssetsStore::delete_assets(caller_principal, asset_ids),
 		Err(err) => Err(err),
 	}
 }

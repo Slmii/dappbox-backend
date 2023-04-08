@@ -56,9 +56,9 @@ fn get_all_chunks() -> Result<HashMap<(u32, Principal), Vec<u8>>, ApiError> {
 
 #[update]
 #[candid_method(update)]
-fn delete_chunks_intercanister_call(user_principal: Principal, chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+fn delete_chunks_intercanister_call(caller_principal: Principal, chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 	match validate_admin(&caller()) {
-		Ok(_) => ChunksStore::delete_chunks_intercanister_call(user_principal, chunk_ids),
+		Ok(_) => ChunksStore::delete_chunks_intercanister_call(caller_principal, chunk_ids),
 		Err(err) => Err(err),
 	}
 }
@@ -69,7 +69,7 @@ fn delete_chunks_intercanister_call(user_principal: Principal, chunk_ids: Vec<u3
 #[candid_method(query)]
 fn get_chunks_by_chunk_id(chunk_id: u32) -> Result<Vec<u8>, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => ChunksStore::get_chunks_by_chunk_id(chunk_id, principal),
+		Ok(caller_principal) => ChunksStore::get_chunks_by_chunk_id(chunk_id, caller_principal),
 		Err(err) => Err(err),
 	}
 }
@@ -78,7 +78,7 @@ fn get_chunks_by_chunk_id(chunk_id: u32) -> Result<Vec<u8>, ApiError> {
 #[candid_method(update)]
 fn add_chunk(chunk: PostChunk) -> Result<Chunk, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => ChunksStore::add_chunk(principal, chunk),
+		Ok(caller_principal) => ChunksStore::add_chunk(caller_principal, chunk),
 		Err(err) => Err(err),
 	}
 }
@@ -87,7 +87,7 @@ fn add_chunk(chunk: PostChunk) -> Result<Chunk, ApiError> {
 #[candid_method(update)]
 fn delete_chunks(chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => ChunksStore::delete_chunks(principal, chunk_ids),
+		Ok(caller_principal) => ChunksStore::delete_chunks(caller_principal, chunk_ids),
 		Err(err) => Err(err),
 	}
 }

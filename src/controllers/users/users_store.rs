@@ -49,15 +49,15 @@ impl UsersStore {
 	/// Get user by principal.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	///
 	/// # Returns
 	/// - `User` - User
-	pub fn get_user(principal: Principal) -> Result<User, ApiError> {
+	pub fn get_user(caller_principal: Principal) -> Result<User, ApiError> {
 		STATE.with(|state| {
 			let state = state.borrow();
 
-			let opt_user = state.users.get(&principal);
+			let opt_user = state.users.get(&caller_principal);
 			opt_user.map_or(Err(ApiError::NotFound("USER_NOT_FOUND".to_string())), |user| Ok(user.clone()))
 		})
 	}
@@ -65,27 +65,27 @@ impl UsersStore {
 	/// Create user.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `username` - Username
 	///
 	/// # Returns
 	/// - `User` - User
-	pub async fn create_user(principal: Principal, username: Option<String>) -> Result<User, ApiError> {
+	pub async fn create_user(caller_principal: Principal, username: Option<String>) -> Result<User, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
-			if state.users.contains_key(&principal) {
+			if state.users.contains_key(&caller_principal) {
 				return Err(ApiError::AlreadyExists("USER_EXISTS".to_string()));
 			}
 
 			let user_to_add = User {
-				user_id: principal,
+				user_id: caller_principal,
 				username,
 				created_at: time(),
 				canisters: vec![],
 			};
 
-			state.users.insert(principal, user_to_add.clone());
+			state.users.insert(caller_principal, user_to_add.clone());
 
 			Ok(user_to_add.clone())
 		})
@@ -123,11 +123,11 @@ impl UsersStore {
 	/// This canister will be used to store chunks. It will be created for each user.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	///
 	/// # Returns
 	/// - `Principal` - Principal of the created canister
-	async fn create_chunks_canister(principal: Principal) -> Result<Principal, ApiError> {
+	async fn create_chunks_canister(caller_principal: Principal) -> Result<Principal, ApiError> {
 		let canister_settings = CanisterSettings {
 			controllers: Some(vec![caller(), id()]),
 			compute_allocation: None,
@@ -141,7 +141,9 @@ impl UsersStore {
 		match canister_result {
 			// If canister creation is successfull
 			Ok(canister) => {
-				let wasm_result = canister.install_code(InstallCodeMode::Install, wasm, (Some(principal),)).await;
+				let wasm_result = canister.install_code(InstallCodeMode::Install, wasm, (
+					Some(caller_principal),
+				)).await;
 
 				// If WASM installation is successfull
 				match wasm_result {

@@ -46,16 +46,16 @@ impl AssetsStore {
 	/// Get assets by principal.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	///
 	/// # Returns
 	/// - `Vec<Asset>` - Assets
-	pub fn get_user_assets(principal: Principal) -> Vec<Asset> {
+	pub fn get_user_assets(caller_principal: Principal) -> Vec<Asset> {
 		STATE.with(|state| {
 			let state = state.borrow();
 
 			// Get user's assets
-			let user_asset_ids_by_principal = state.user_assets.get(&principal).cloned().unwrap_or_default();
+			let user_asset_ids_by_principal = state.user_assets.get(&caller_principal).cloned().unwrap_or_default();
 
 			// Loop through all assets and check if the asset_id contains in user's assets list
 			state.assets
@@ -69,16 +69,16 @@ impl AssetsStore {
 	/// Add asset.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `post_asset` - Asset to add
 	///
 	/// # Returns
 	/// - `Asset` - Added asset
-	pub async fn add_asset(principal: Principal, post_asset: PostAsset) -> Asset {
+	pub async fn add_asset(caller_principal: Principal, post_asset: PostAsset) -> Asset {
 		// If existing asset, then do intercanister call to previous delete_chunks
 		if let Some(asset_id) = post_asset.id {
 			// Get user assets using get_user_assets call
-			let user_assets = Self::get_user_assets(principal.clone());
+			let user_assets = Self::get_user_assets(caller_principal.clone());
 
 			// Find a specific asset by id
 			let asset = user_assets.into_iter().find(|asset| asset.id == asset_id);
@@ -99,7 +99,7 @@ impl AssetsStore {
 				let _: Result<(Result<Vec<u32>, ApiError>,), _> = call::call(
 					caniser_principal.clone(),
 					"delete_chunks_intercanister_call",
-					(principal.clone(), chunk_ids.clone())
+					(caller_principal.clone(), chunk_ids.clone())
 				).await;
 			}
 		}
@@ -108,7 +108,7 @@ impl AssetsStore {
 			let mut state = state.borrow_mut();
 
 			// Find all user_assets linked to the principal (caller)
-			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
+			let user_asset_ids = state.user_assets.get(&caller_principal).cloned().unwrap_or_default();
 			// Find a specific asset with given value
 			let asset_id = user_asset_ids
 				.into_iter()
@@ -132,7 +132,7 @@ impl AssetsStore {
 
 					let new_asset = Asset {
 						id: asset_id,
-						user_id: principal,
+						user_id: caller_principal,
 						parent_id: post_asset.parent_id,
 						asset_type: post_asset.asset_type,
 						name: post_asset.name,
@@ -150,7 +150,7 @@ impl AssetsStore {
 					state.assets.insert(asset_id, new_asset.clone());
 
 					// Add asset to user_assets
-					state.user_assets.entry(principal).or_default().push(asset_id);
+					state.user_assets.entry(caller_principal).or_default().push(asset_id);
 
 					new_asset
 				})
@@ -160,17 +160,17 @@ impl AssetsStore {
 	/// Edit asset.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `edit_asset` - Asset to edit
 	///
 	/// # Returns
 	/// - `Asset` - Edited asset
-	pub fn edit_asset(principal: Principal, edit_asset: EditAsset) -> Result<Asset, ApiError> {
+	pub fn edit_asset(caller_principal: Principal, edit_asset: EditAsset) -> Result<Asset, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
 			// Find all user_assets linked to the principal (caller)
-			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
+			let user_asset_ids = state.user_assets.get(&caller_principal).cloned().unwrap_or_default();
 			// Find a specific asset with given value
 			let asset_id = user_asset_ids.into_iter().find(|&asset_id| asset_id == edit_asset.id);
 
@@ -213,18 +213,18 @@ impl AssetsStore {
 	/// Move assets to different parent.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `move_assets` - Assets to move
 	///
 	/// # Returns
 	/// - `Vec<Asset>` - Moved assets
-	pub fn move_assets(principal: Principal, move_assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
+	pub fn move_assets(caller_principal: Principal, move_assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 			let mut temp: Vec<Asset> = vec![];
 
 			// Find all user_assets linked to the principal (caller)
-			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
+			let user_asset_ids = state.user_assets.get(&caller_principal).cloned().unwrap_or_default();
 
 			for move_asset in move_assets {
 				// Find a specific asset based on the asset to move
@@ -256,17 +256,17 @@ impl AssetsStore {
 	/// If the asset is a file, only the file will be deleted.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `delete_asset_ids` - Asset IDs to delete
 	///
 	/// # Returns
 	/// - `Vec<u32>` - Deleted asset IDs
-	pub fn delete_assets(principal: Principal, delete_asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+	pub fn delete_assets(caller_principal: Principal, delete_asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
 			// Find all assets linked to the principal (caller)
-			let user_asset_ids = state.user_assets.get(&principal).cloned().unwrap_or_default();
+			let user_asset_ids = state.user_assets.get(&caller_principal).cloned().unwrap_or_default();
 
 			let source_set: HashSet<u32> = delete_asset_ids.iter().cloned().collect();
 			let target_set: HashSet<u32> = user_asset_ids.iter().cloned().collect();
@@ -275,7 +275,7 @@ impl AssetsStore {
 				return Err(ApiError::NotFound("ASSET_NOT_FOUND".to_string()));
 			}
 
-			if let Some(assets) = state.user_assets.get_mut(&principal) {
+			if let Some(assets) = state.user_assets.get_mut(&caller_principal) {
 				assets.retain(|&id| !delete_asset_ids.contains(&id));
 			}
 

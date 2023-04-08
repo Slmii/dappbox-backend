@@ -44,20 +44,20 @@ impl ChunksStore {
 	///
 	/// # Arguments
 	/// - `chunk_id` - Chunk ID
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	///
 	/// # Returns
 	/// - `Vec<u8>` - Chunks
-	pub fn get_chunks_by_chunk_id(chunk_id: u32, principal: Principal) -> Result<Vec<u8>, ApiError> {
+	pub fn get_chunks_by_chunk_id(chunk_id: u32, caller_principal: Principal) -> Result<Vec<u8>, ApiError> {
 		STATE.with(|state| {
 			let state = state.borrow();
 
-			if principal != state.canister_owner {
+			if caller_principal != state.canister_owner {
 				return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
 			}
 
 			// Get chunks linked to the chunk ID and principal (caller)
-			let opt_chunks = state.chunks.get(&(chunk_id, principal));
+			let opt_chunks = state.chunks.get(&(chunk_id, caller_principal));
 
 			if let Some(chunks) = opt_chunks {
 				Ok(chunks.clone())
@@ -70,16 +70,16 @@ impl ChunksStore {
 	/// Add a chunk.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `post_chunk` - Chunk to add
 	///
 	/// # Returns
 	/// - `Chunk` - Chunk added
-	pub fn add_chunk(principal: Principal, post_chunk: PostChunk) -> Result<Chunk, ApiError> {
+	pub fn add_chunk(caller_principal: Principal, post_chunk: PostChunk) -> Result<Chunk, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
-			if principal != state.canister_owner {
+			if caller_principal != state.canister_owner {
 				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
 			}
 
@@ -88,7 +88,7 @@ impl ChunksStore {
 			let chunk_id = state.chunk_id;
 
 			// Add chunk linked to the chunk and principal (caller)
-			state.chunks.insert((chunk_id, principal), post_chunk.blob);
+			state.chunks.insert((chunk_id, caller_principal), post_chunk.blob);
 
 			Ok(Chunk {
 				id: chunk_id,
@@ -101,22 +101,22 @@ impl ChunksStore {
 	/// Delete chunks.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `delete_chunk_ids` - Chunk IDs to delete
 	///
 	/// # Returns
 	/// - `Vec<u32>` - Chunk IDs that were deleted
-	pub fn delete_chunks(principal: Principal, delete_chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+	pub fn delete_chunks(caller_principal: Principal, delete_chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 			let mut removed_chunk_ids = Vec::new();
 
-			if principal != state.canister_owner {
+			if caller_principal != state.canister_owner {
 				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
 			}
 
 			for id in delete_chunk_ids {
-				if state.chunks.remove(&(id, principal)).is_some() {
+				if state.chunks.remove(&(id, caller_principal)).is_some() {
 					removed_chunk_ids.push(id);
 				}
 			}
@@ -129,13 +129,13 @@ impl ChunksStore {
 	/// uploading the exact same asset.
 	///
 	/// # Arguments
-	/// - `principal` - Principal of the caller
+	/// - `caller_principal` - Principal of the caller
 	/// - `delete_chunk_ids` - Chunk IDs to delete
 	///
 	/// # Returns
 	/// - `Vec<u32>` - Chunk IDs that were deleted
 	pub fn delete_chunks_intercanister_call(
-		principal: Principal,
+		caller_principal: Principal,
 		delete_chunk_ids: Vec<u32>
 	) -> Result<Vec<u32>, ApiError> {
 		STATE.with(|state| {
@@ -144,7 +144,7 @@ impl ChunksStore {
 
 			// Delete chunks linked to the chunk IDs and principal (caller)
 			for id in delete_chunk_ids {
-				if state.chunks.remove(&(id, principal)).is_some() {
+				if state.chunks.remove(&(id, caller_principal)).is_some() {
 					removed_chunk_ids.push(id);
 				}
 			}
