@@ -19,10 +19,18 @@ thread_local! {
 impl UsersStore {
 	// ========== Admin calls
 
+	/// Get all users.
+	///
+	/// # Returns
+	/// - `Vec<User>` - Users
 	pub fn get_all_users() -> Vec<User> {
 		STATE.with(|state| state.borrow().users.values().cloned().collect())
 	}
 
+	/// Get all chunk canisters.
+	///
+	/// # Returns
+	/// - `HashMap<Principal, Vec<Principal>>` - Chunk canisters
 	pub fn get_all_chunk_canisters() -> HashMap<Principal, Vec<Principal>> {
 		STATE.with(|state| {
 			let state = state.borrow();
@@ -38,6 +46,13 @@ impl UsersStore {
 
 	// ========== Non-admin calls
 
+	/// Get user by principal.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	///
+	/// # Returns
+	/// - `User` - User
 	pub fn get_user(principal: Principal) -> Result<User, ApiError> {
 		STATE.with(|state| {
 			let state = state.borrow();
@@ -47,6 +62,14 @@ impl UsersStore {
 		})
 	}
 
+	/// Create user.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `username` - Username
+	///
+	/// # Returns
+	/// - `User` - User
 	pub async fn create_user(principal: Principal, username: Option<String>) -> Result<User, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
@@ -96,6 +119,14 @@ impl UsersStore {
 		// }
 	}
 
+	/// Create chunks canister.
+	/// This canister will be used to store chunks. It will be created for each user.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	///
+	/// # Returns
+	/// - `Principal` - Principal of the created canister
 	async fn create_chunks_canister(principal: Principal) -> Result<Principal, ApiError> {
 		let canister_settings = CanisterSettings {
 			controllers: Some(vec![caller(), id()]),

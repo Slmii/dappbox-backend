@@ -1,5 +1,5 @@
 use candid::{ CandidType, Deserialize, Principal };
-use ic_cdk::{ api::time };
+use ic_cdk::api::{ time, call };
 use lib::{
 	types::{
 		api_error::ApiError,
@@ -33,12 +33,23 @@ thread_local! {
 impl AssetsStore {
 	// ========== Admin calls
 
+	/// Get all assets.
+	///
+	/// # Returns
+	/// - `Vec<Asset>` - Assets
 	pub fn get_all_assets() -> Vec<Asset> {
 		STATE.with(|state| state.borrow().assets.values().cloned().collect())
 	}
 
 	// ========== Non-admin calls
 
+	/// Get assets by principal.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	///
+	/// # Returns
+	/// - `Vec<Asset>` - Assets
 	pub fn get_user_assets(principal: Principal) -> Vec<Asset> {
 		STATE.with(|state| {
 			let state = state.borrow();
@@ -55,7 +66,44 @@ impl AssetsStore {
 		})
 	}
 
-	pub fn add_asset(principal: Principal, post_asset: PostAsset) -> Asset {
+	/// Add asset.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `post_asset` - Asset to add
+	///
+	/// # Returns
+	/// - `Asset` - Added asset
+	pub async fn add_asset(principal: Principal, post_asset: PostAsset) -> Asset {
+		// If existing asset, then do intercanister call to previous delete_chunks
+		if let Some(asset_id) = post_asset.id {
+			// Get user assets using get_user_assets call
+			let user_assets = Self::get_user_assets(principal.clone());
+
+			// Find a specific asset by id
+			let asset = user_assets.into_iter().find(|asset| asset.id == asset_id);
+
+			if let Some(asset) = asset {
+				// Get chunks from asset
+				let chunks = asset.chunks;
+
+				// Get all chunk ids
+				let chunk_ids: Vec<u32> = chunks
+					.iter()
+					.map(|chunk| chunk.id)
+					.collect();
+
+				// Get first chunk's canister principal
+				let caniser_principal = chunks.first().unwrap().canister;
+
+				let _: Result<(Result<Vec<u32>, ApiError>,), _> = call::call(
+					caniser_principal.clone(),
+					"delete_chunks_intercanister_call",
+					(principal.clone(), chunk_ids.clone())
+				).await;
+			}
+		}
+
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
@@ -109,6 +157,14 @@ impl AssetsStore {
 		})
 	}
 
+	/// Edit asset.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `edit_asset` - Asset to edit
+	///
+	/// # Returns
+	/// - `Asset` - Edited asset
 	pub fn edit_asset(principal: Principal, edit_asset: EditAsset) -> Result<Asset, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
@@ -154,6 +210,14 @@ impl AssetsStore {
 		})
 	}
 
+	/// Move assets to different parent.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `move_assets` - Assets to move
+	///
+	/// # Returns
+	/// - `Vec<Asset>` - Moved assets
 	pub fn move_assets(principal: Principal, move_assets: Vec<MoveAsset>) -> Result<Vec<Asset>, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
@@ -187,6 +251,16 @@ impl AssetsStore {
 		})
 	}
 
+	/// Delete assets.
+	/// If the asset is a folder, all children will be deleted as well.
+	/// If the asset is a file, only the file will be deleted.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `delete_asset_ids` - Asset IDs to delete
+	///
+	/// # Returns
+	/// - `Vec<u32>` - Deleted asset IDs
 	pub fn delete_assets(principal: Principal, delete_asset_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();

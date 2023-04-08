@@ -53,9 +53,9 @@ fn get_user_assets() -> Result<Vec<Asset>, ApiError> {
 
 #[update]
 #[candid_method(update)]
-fn add_asset(asset: PostAsset) -> Result<Asset, ApiError> {
+async fn add_asset(asset: PostAsset) -> Result<Asset, ApiError> {
 	match validate_anonymous(&caller()) {
-		Ok(principal) => Ok(AssetsStore::add_asset(principal, asset)),
+		Ok(principal) => Ok(AssetsStore::add_asset(principal, asset).await),
 		Err(err) => Err(err),
 	}
 }

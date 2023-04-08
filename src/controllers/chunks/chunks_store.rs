@@ -1,6 +1,6 @@
 use candid::{ CandidType, Deserialize, Principal };
-use ic_cdk::{ id };
-use lib::{ types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } } };
+use ic_cdk::id;
+use lib::types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } };
 use std::{ cell::RefCell, collections::HashMap };
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -30,12 +30,24 @@ thread_local! {
 impl ChunksStore {
 	// ========== Admin calls
 
+	/// Get all chunks.
+	///
+	/// # Returns
+	/// - `HashMap<(u32, Principal), Vec<u8>>` - Chunks
 	pub fn get_all_chunks() -> HashMap<(u32, Principal), Vec<u8>> {
 		STATE.with(|state| state.borrow().chunks.clone())
 	}
 
 	// ========== Non-admin calls
 
+	/// Get chunks by chunk ID.
+	///
+	/// # Arguments
+	/// - `chunk_id` - Chunk ID
+	/// - `principal` - Principal of the caller
+	///
+	/// # Returns
+	/// - `Vec<u8>` - Chunks
 	pub fn get_chunks_by_chunk_id(chunk_id: u32, principal: Principal) -> Result<Vec<u8>, ApiError> {
 		STATE.with(|state| {
 			let state = state.borrow();
@@ -55,6 +67,14 @@ impl ChunksStore {
 		})
 	}
 
+	/// Add a chunk.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `post_chunk` - Chunk to add
+	///
+	/// # Returns
+	/// - `Chunk` - Chunk added
 	pub fn add_chunk(principal: Principal, post_chunk: PostChunk) -> Result<Chunk, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
@@ -78,6 +98,14 @@ impl ChunksStore {
 		})
 	}
 
+	/// Delete chunks.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `delete_chunk_ids` - Chunk IDs to delete
+	///
+	/// # Returns
+	/// - `Vec<u32>` - Chunk IDs that were deleted
 	pub fn delete_chunks(principal: Principal, delete_chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
@@ -87,6 +115,34 @@ impl ChunksStore {
 				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
 			}
 
+			for id in delete_chunk_ids {
+				if state.chunks.remove(&(id, principal)).is_some() {
+					removed_chunk_ids.push(id);
+				}
+			}
+
+			Ok(removed_chunk_ids)
+		})
+	}
+
+	/// Delete chunks. This should only be called by the `assets` canister to delete old chunks when
+	/// uploading the exact same asset.
+	///
+	/// # Arguments
+	/// - `principal` - Principal of the caller
+	/// - `delete_chunk_ids` - Chunk IDs to delete
+	///
+	/// # Returns
+	/// - `Vec<u32>` - Chunk IDs that were deleted
+	pub fn delete_chunks_intercanister_call(
+		principal: Principal,
+		delete_chunk_ids: Vec<u32>
+	) -> Result<Vec<u32>, ApiError> {
+		STATE.with(|state| {
+			let mut state = state.borrow_mut();
+			let mut removed_chunk_ids = Vec::new();
+
+			// Delete chunks linked to the chunk IDs and principal (caller)
 			for id in delete_chunk_ids {
 				if state.chunks.remove(&(id, principal)).is_some() {
 					removed_chunk_ids.push(id);

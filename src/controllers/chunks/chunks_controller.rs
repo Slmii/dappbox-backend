@@ -54,6 +54,15 @@ fn get_all_chunks() -> Result<HashMap<(u32, Principal), Vec<u8>>, ApiError> {
 	}
 }
 
+#[update]
+#[candid_method(update)]
+fn delete_chunks_intercanister_call(user_principal: Principal, chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
+	match validate_admin(&caller()) {
+		Ok(_) => ChunksStore::delete_chunks_intercanister_call(user_principal, chunk_ids),
+		Err(err) => Err(err),
+	}
+}
+
 // ========== Non-admin calls
 
 #[query]
