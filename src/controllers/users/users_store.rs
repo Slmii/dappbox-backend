@@ -71,7 +71,7 @@ impl UsersStore {
 	/// # Returns
 	/// - `User` - User
 	pub async fn create_user(caller_principal: Principal, username: Option<String>) -> Result<User, ApiError> {
-		STATE.with(|state| {
+		let user = STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
 			if state.users.contains_key(&caller_principal) {
@@ -88,35 +88,36 @@ impl UsersStore {
 			state.users.insert(caller_principal, user_to_add.clone());
 
 			Ok(user_to_add.clone())
-		})
+		});
 
-		// match user {
-		// 	// If user is created
-		// 	Ok(user) => {
-		// 		// Create new canister
-		// 		let canister_principal = Self::create_chunks_canister(principal).await;
+		match user {
+			// If user is created successfully
+			Ok(user) => {
+				// Create new canister for chunks
+				let canister_principal = Self::create_chunks_canister(caller_principal).await;
 
-		// 		match canister_principal {
-		// 			// If canister is created
-		// 			Ok(canister_principal) => {
-		// 				// Add the created canister principal to user field 'canisters'
-		// 				STATE.with(|state| {
-		// 					let mut state = state.borrow_mut();
+				match canister_principal {
+					// If canister is created successfully
+					Ok(canister_principal) => {
+						// Add the created canister principal to user field 'canisters'
+						STATE.with(|state| {
+							let mut state = state.borrow_mut();
 
-		// 					if let Some(user) = state.users.get_mut(&user.user_id) {
-		// 						user.canisters.push(canister_principal);
-		// 					}
+							if let Some(user) = state.users.get_mut(&user.user_id) {
+								user.canisters.push(canister_principal);
+							}
 
-		// 					Ok(user)
-		// 				})
-		// 			}
-		// 			// If not then throw the received error
-		// 			Err(err) => Err(err),
-		// 		}
-		// 	}
-		// 	// If not then throw the received error
-		// 	Err(error) => Err(error),
-		// }
+							// Return the created user
+							Ok(user)
+						})
+					}
+					// If canister creation failed
+					Err(err) => Err(err),
+				}
+			}
+			// If user creation failed
+			Err(error) => Err(error),
+		}
 	}
 
 	/// Create chunks canister.
@@ -141,13 +142,16 @@ impl UsersStore {
 		match canister_result {
 			// If canister creation is successfull
 			Ok(canister) => {
+				// Install WASM code to the canister
 				let wasm_result = canister.install_code(InstallCodeMode::Install, wasm, (
 					Some(caller_principal),
 				)).await;
 
 				// If WASM installation is successfull
 				match wasm_result {
+					// Return the principal of the created canister
 					Ok(_) => Ok(CanisterID::from(canister)),
+					// If WASM installation failed
 					Err(error) =>
 						Err(
 							ApiError::CanisterFailed(CanisterFailedError {
@@ -157,6 +161,7 @@ impl UsersStore {
 						),
 				}
 			}
+			// If canister creation failed
 			Err(error) =>
 				Err(
 					ApiError::CanisterFailed(CanisterFailedError {
