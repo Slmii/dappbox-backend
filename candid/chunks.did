@@ -32,6 +32,7 @@ type Result_4 = variant { Ok : ChunkStoreState; Err : ApiError };
 service : (opt principal) -> {
   add_chunk : (PostChunk) -> (Result);
   delete_chunks : (vec nat32) -> (Result_1);
+  delete_chunks_intercanister_call : (principal, vec nat32) -> (Result_1);
   get_all_chunks : () -> (Result_2) query;
   get_chunks_by_chunk_id : (nat32) -> (Result_3) query;
   get_state : () -> (Result_4) query;
