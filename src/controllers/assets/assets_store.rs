@@ -75,33 +75,9 @@ impl AssetsStore {
 	/// # Returns
 	/// - `Asset` - Added asset
 	pub async fn add_asset(caller_principal: Principal, post_asset: PostAsset) -> Asset {
-		// If existing asset, then do intercanister call to previous delete_chunks
-		if let Some(asset_id) = post_asset.id {
-			// Get user assets using get_user_assets call
-			let user_assets = Self::get_user_assets(caller_principal.clone());
-
-			// Find a specific asset by id
-			let asset = user_assets.into_iter().find(|asset| asset.id == asset_id);
-
-			if let Some(asset) = asset {
-				// Get chunks from asset
-				let chunks = asset.chunks;
-
-				// Get all chunk ids
-				let chunk_ids: Vec<u32> = chunks
-					.iter()
-					.map(|chunk| chunk.id)
-					.collect();
-
-				// Get first chunk's canister principal
-				let caniser_principal = chunks.first().unwrap().canister;
-
-				let _: Result<(Result<Vec<u32>, ApiError>,), _> = call::call(
-					caniser_principal.clone(),
-					"delete_chunks_intercanister_call",
-					(caller_principal.clone(), chunk_ids.clone())
-				).await;
-			}
+		// Delete previous chunks if asset is a file. Folder doesn't have chunks
+		if post_asset.asset_type == AssetType::File {
+			Self::delete_existing_chunks(&caller_principal, &post_asset).await;
 		}
 
 		STATE.with(|state| {
@@ -283,6 +259,45 @@ impl AssetsStore {
 
 			Ok(delete_asset_ids)
 		})
+	}
+
+	/// Delete existing chunks of an asset. This is used when a user uploads a new version of an asset. The old chunks will be deleted.
+	///
+	/// # Arguments
+	/// - `caller_principal` - Principal of the caller
+	/// - `post_asset` - Asset to delete chunks from
+	///
+	/// # Returns
+	/// - `()` - No return value
+	async fn delete_existing_chunks(caller_principal: &Principal, post_asset: &PostAsset) {
+		// If existing asset, then do intercanister call to previous delete_chunks
+		if let Some(asset_id) = post_asset.id {
+			// Get user assets using get_user_assets call
+			let user_assets = Self::get_user_assets(caller_principal.clone());
+
+			// Find a specific asset by id
+			let asset = user_assets.into_iter().find(|asset| asset.id == asset_id);
+
+			if let Some(asset) = asset {
+				// Get chunks from asset
+				let chunks = asset.chunks;
+
+				// Get all chunk ids
+				let chunk_ids: Vec<u32> = chunks
+					.iter()
+					.map(|chunk| chunk.id)
+					.collect();
+
+				// Get first chunk's canister principal
+				let caniser_principal = chunks.first().unwrap().canister;
+
+				let _: Result<(Result<Vec<u32>, ApiError>,), _> = call::call(
+					caniser_principal.clone(),
+					"delete_chunks_intercanister_call",
+					(caller_principal.clone(), chunk_ids.clone())
+				).await;
+			}
+		}
 	}
 
 	// TODO: get_shared_assets(principal) -> exactly the same as 'get_user_assets' but then for shared_assets
