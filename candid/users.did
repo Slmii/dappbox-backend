@@ -26,6 +26,7 @@ type User = record {
   created_at : nat64;
   user_id : principal;
   canisters : vec principal;
+  alias_user_ids : opt vec principal;
 };
 service : {
   create_user : (opt text) -> (Result);

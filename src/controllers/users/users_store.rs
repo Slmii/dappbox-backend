@@ -83,6 +83,7 @@ impl UsersStore {
 				username,
 				created_at: time(),
 				canisters: vec![],
+				alias_user_ids: None,
 			};
 
 			state.users.insert(caller_principal, user_to_add.clone());

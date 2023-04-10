@@ -6,6 +6,7 @@ pub struct User {
 	pub username: Option<String>,
 	pub created_at: u64,
 	pub canisters: Vec<Principal>,
+	pub alias_user_ids: Option<Vec<Principal>>,
 }
 
 impl Default for User {
@@ -15,6 +16,7 @@ impl Default for User {
 			username: Default::default(),
 			created_at: Default::default(),
 			canisters: Default::default(),
+			alias_user_ids: Default::default(),
 		}
 	}
 }
