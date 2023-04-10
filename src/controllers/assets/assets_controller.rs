@@ -1,5 +1,5 @@
 use crate::assets_store::{ AssetsStore, STATE };
-use candid::{ candid_method };
+use candid::candid_method;
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update };
 use lib::{

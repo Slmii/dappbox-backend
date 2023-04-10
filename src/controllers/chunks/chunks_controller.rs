@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use candid::{ candid_method, Principal };
 use ic_cdk::{ caller, storage };
 use ic_cdk_macros::{ post_upgrade, pre_upgrade, query, update, init };

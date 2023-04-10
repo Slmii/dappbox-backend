@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use crate::users_store::{ UsersStore, STATE };
 use candid::{ candid_method, Principal };
 use ic_cdk::{ caller, storage };

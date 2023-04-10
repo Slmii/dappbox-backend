@@ -1,11 +1,9 @@
 use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::api::{ time, call };
-use lib::{
-	types::{
-		api_error::ApiError,
-		asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset, SharedWith },
-		invite::Invite,
-	},
+use lib::types::{
+	api_error::ApiError,
+	asset::{ Asset, EditAsset, PostAsset, AssetType, MoveAsset, SharedWith },
+	invite::Invite,
 };
 use std::{ cell::RefCell, collections::{ HashMap, HashSet } };
 
