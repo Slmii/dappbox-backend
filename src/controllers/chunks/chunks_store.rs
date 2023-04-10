@@ -1,6 +1,6 @@
 use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::id;
-use lib::types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } };
+use lib::{ types::{ api_error::ApiError, chunk::{ Chunk, PostChunk } }, utils::validate_admin };
 use std::{ cell::RefCell, collections::HashMap };
 
 #[derive(CandidType, Clone, Deserialize)]
@@ -52,7 +52,14 @@ impl ChunksStore {
 		STATE.with(|state| {
 			let state = state.borrow();
 
-			if caller_principal != state.canister_owner {
+			if validate_admin(&caller_principal).is_ok() {
+				// If the canister owner is not the anonymous `chunks` canister, return an error.
+				// Admin can only delete chunks from the anonymous `chunks` canister.
+				if state.canister_owner != Principal::from_text("2vxsx-fae").unwrap() {
+					return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
+				}
+			} else if caller_principal != state.canister_owner {
+				// If the caller is not the canister owner, return an error
 				return Err(ApiError::NotFound("CHUNKS_NOT_FOUND".to_string()));
 			}
 
@@ -79,7 +86,14 @@ impl ChunksStore {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 
-			if caller_principal != state.canister_owner {
+			if validate_admin(&caller_principal).is_ok() {
+				// If the canister owner is not the anonymous `chunks` canister, return an error.
+				// Admin can only delete chunks from the anonymous `chunks` canister.
+				if state.canister_owner != Principal::from_text("2vxsx-fae").unwrap() {
+					return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
+				}
+			} else if caller_principal != state.canister_owner {
+				// If the caller is not the canister owner, return an error
 				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
 			}
 
@@ -111,7 +125,14 @@ impl ChunksStore {
 			let mut state = state.borrow_mut();
 			let mut removed_chunk_ids = Vec::new();
 
-			if caller_principal != state.canister_owner {
+			if validate_admin(&caller_principal).is_ok() {
+				// If the canister owner is not the anonymous `chunks` canister, return an error.
+				// Admin can only delete chunks from the anonymous `chunks` canister.
+				if state.canister_owner != Principal::from_text("2vxsx-fae").unwrap() {
+					return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
+				}
+			} else if caller_principal != state.canister_owner {
+				// If the caller is not the canister owner, return an error
 				return Err(ApiError::NotFound("UNAUTHORIZED".to_string()));
 			}
 

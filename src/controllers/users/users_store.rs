@@ -3,6 +3,7 @@ use ic_cdk::{ api::time, caller, id };
 use lib::{
 	types::{ api_error::{ ApiError, CanisterFailedError }, user::User },
 	canister::{ Canister, CanisterSettings, InstallCodeMode, CanisterID },
+	utils::validate_admin,
 };
 use std::{ cell::RefCell, collections::HashMap };
 
@@ -90,33 +91,39 @@ impl UsersStore {
 			Ok(user_to_add.clone())
 		});
 
-		match user {
-			// If user is created successfully
-			Ok(user) => {
-				// Create new canister for chunks
-				let canister_principal = Self::create_chunks_canister(caller_principal).await;
+		match validate_admin(&caller_principal) {
+			Ok(_) => user.clone(),
+			// If caller is not admin then create a new canister for chunks
+			Err(_) => {
+				match user {
+					// If user is created successfully
+					Ok(user) => {
+						// Create new canister for chunks
+						let canister_principal = Self::create_chunks_canister(caller_principal).await;
 
-				match canister_principal {
-					// If canister is created successfully
-					Ok(canister_principal) => {
-						// Add the created canister principal to user field 'canisters'
-						STATE.with(|state| {
-							let mut state = state.borrow_mut();
+						match canister_principal {
+							// If canister is created successfully
+							Ok(canister_principal) => {
+								// Add the created canister principal to user field 'canisters'
+								STATE.with(|state| {
+									let mut state = state.borrow_mut();
 
-							if let Some(user) = state.users.get_mut(&user.user_id) {
-								user.canisters.push(canister_principal);
+									if let Some(user) = state.users.get_mut(&user.user_id) {
+										user.canisters.push(canister_principal);
+									}
+
+									// Return the created user
+									Ok(user)
+								})
 							}
-
-							// Return the created user
-							Ok(user)
-						})
+							// If canister creation failed
+							Err(err) => Err(err),
+						}
 					}
-					// If canister creation failed
-					Err(err) => Err(err),
+					// If user creation failed
+					Err(error) => Err(error),
 				}
 			}
-			// If user creation failed
-			Err(error) => Err(error),
 		}
 	}
 
