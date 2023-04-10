@@ -95,7 +95,11 @@ fn delete_chunks(chunk_ids: Vec<u32>) -> Result<Vec<u32>, ApiError> {
 fn init(canister_owner: Option<Principal>) {
 	STATE.with(|state| {
 		if let Some(owner) = canister_owner {
-			state.borrow_mut().canister_owner = owner;
+			let mut state = state.borrow_mut();
+
+			state.canister_owner = owner;
+			state.chunk_id = 0;
+			state.chunks = HashMap::new();
 		}
 	});
 }
